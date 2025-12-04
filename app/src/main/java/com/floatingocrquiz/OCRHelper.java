@@ -39,7 +39,7 @@ public class OCRHelper {
     private void initBaiduOCR() {
         // 使用自定义License文件名：aip-ocr.license
         // 确保该文件已放置在assets目录下
-        OCR.getInstance(context).initAccessTokenWithFile("aip-ocr.license", new OnResultListener<String>() {
+        OCR.getInstance(context).initAccessToken(new OnResultListener<String>() {
             @Override
             public void onResult(String accessToken) {
                 // 初始化成功，accessToken会自动管理，无需手动维护
@@ -52,7 +52,7 @@ public class OCRHelper {
                 Log.e(TAG, "百度OCR SDK初始化失败: " + error.getMessage());
                 Log.e(TAG, "错误码: " + error.getErrorCode());
             }
-        });
+        }, context);
     }
     
     /**

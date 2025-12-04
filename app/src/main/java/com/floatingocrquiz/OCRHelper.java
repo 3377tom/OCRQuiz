@@ -6,8 +6,8 @@ import android.util.Log;
 
 import com.baidu.ocr.sdk.OCR;
 import com.baidu.ocr.sdk.OnResultListener;
-import com.baidu.ocr.sdk.OCRError;
-import com.baidu.ocr.sdk.AccessToken;
+import com.baidu.ocr.sdk.exception.OCRError;
+import com.baidu.ocr.sdk.model.AccessToken;
 import com.baidu.ocr.sdk.model.GeneralBasicParams;
 import com.baidu.ocr.sdk.model.GeneralResult;
 import com.baidu.ocr.sdk.model.WordSimple;
@@ -53,7 +53,7 @@ public class OCRHelper {
                 Log.e(TAG, "百度OCR SDK初始化失败: " + error.getMessage());
                 Log.e(TAG, "错误码: " + error.getErrorCode());
             }
-        }, context);
+        }, "aip-ocr.license", context);
     }
     
     /**

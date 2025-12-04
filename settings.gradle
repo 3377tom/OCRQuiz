@@ -11,10 +11,6 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        // 百度Maven仓库
-        maven {
-            url 'https://mvn.baidu.com/repository/baidu'
-        }
     }
 }
 

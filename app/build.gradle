@@ -42,6 +42,12 @@ android {
             excludes += ['META-INF/DEPENDENCIES']
         }
     }
+    
+    repositories {
+        flatDir {
+            dirs 'libs'
+        }
+    }
 }
 
 dependencies {
@@ -54,6 +60,7 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     
-    // 百度OCR Android SDK依赖
-    implementation 'com.baidu.android:ocr-sdk:4.16.14'
+    // 百度OCR Android SDK本地依赖
+    implementation(name: 'ocrsdk', ext: 'aar')
+    implementation files('libs/license.jar')
 }

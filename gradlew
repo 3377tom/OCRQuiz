@@ -23,7 +23,7 @@
 #   Important for running:
 #
 #   (1) You need a POSIX-compliant shell to run this script. If your /bin/sh is
-#       noncompliant, but you have some other compliant shell such as ksh o
+#       noncompliant, but you have some other compliant shell such as ksh or
 #       bash, then to run this script, type that shell name before the whole
 #       command line, like:
 #
@@ -105,14 +105,14 @@ cygwin=false
 msys=false
 darwin=false
 nonstop=false
-case "$( uname )" in                
-  CYGWIN* )         cygwin=true  ;;
-  Darwin* )         darwin=true  ;;
-  MSYS* | MINGW* )  msys=true    ;;
+case "$( uname )" in                #(
+  CYGWIN* )         cygwin=true  ;; #(
+  Darwin* )         darwin=true  ;; #(
+  MSYS* | MINGW* )  msys=true    ;; #(
   NONSTOP* )        nonstop=true ;;
 esac
 
-CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.ja
+CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
 
 
 # Determine the Java command to use to start the JVM.
@@ -130,19 +130,9 @@ Please set the JAVA_HOME variable in your environment to match the
 location of your Java installation."
     fi
 else
-    # Try to find java executable in common locations
-    JAVACMD=$(which java 2>/dev/null)
-    if [ -z "$JAVACMD" ]; then
-        # Check common Java installation paths
-        for path in /usr/lib/jvm/java-17-openjdk/bin/java /usr/lib/jvm/java-11-openjdk/bin/java /usr/lib/jvm/java-8-openjdk/bin/java /opt/java/bin/java /usr/local/java/bin/java; do
-            if [ -x "$path" ]; then
-                JAVACMD=$path
-                break
-            fi
-        done
-    fi
-    
-    if [ -z "$JAVACMD" ]; then
+    JAVACMD=java
+    if ! command -v java >/dev/null 2>&1
+    then
         die "ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
 
 Please set the JAVA_HOME variable in your environment to match the
@@ -152,7 +142,7 @@ fi
 
 # Increase the maximum file descriptors if we can.
 if ! "$cygwin" && ! "$darwin" && ! "$nonstop" ; then
-    case $MAX_FD in
+    case $MAX_FD in #(
       max*)
         # In POSIX sh, ulimit -H is undefined. That's why the result is checked to see if it worked.
         # shellcheck disable=SC2039,SC3045
@@ -245,7 +235,7 @@ fi
 # that process (while maintaining the separation between arguments), and wrap
 # the whole thing up as a single "set" statement.
 #
-# This will of course break if any of these variables contains a newline o
+# This will of course break if any of these variables contains a newline or
 # an unmatched quote.
 #
 

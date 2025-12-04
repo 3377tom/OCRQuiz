@@ -260,18 +260,25 @@ public class ScreenCaptureService extends Service {
                 ocrHelper = new OCRHelper(this);
                 String recognizedText = ocrHelper.recognizeText(selectedBitmap);
 
+                String displayText;
                 if (!recognizedText.isEmpty()) {
-                    // 查询题库
-                    QuestionBankHelper questionBankHelper = new QuestionBankHelper(this);
-                    String answer = questionBankHelper.queryAnswer(recognizedText);
-
-                    // 更新浮动窗口显示答案
-                    Intent intent = new Intent(FloatingWindowService.ACTION_UPDATE_ANSWER);
-                    intent.putExtra(FloatingWindowService.EXTRA_ANSWER, answer);
-                    sendBroadcast(intent);
+                    // 直接使用OCR识别的原始文字，不查询题库
+                    displayText = "百度OCR识别结果：\n" + recognizedText;
+                } else {
+                    // OCR识别失败或没有识别到文字
+                    displayText = "无法识别文字，请重新截图";
                 }
+
+                // 更新浮动窗口显示识别结果
+                Intent intent = new Intent(FloatingWindowService.ACTION_UPDATE_ANSWER);
+                intent.putExtra(FloatingWindowService.EXTRA_ANSWER, displayText);
+                sendBroadcast(intent);
             } catch (Exception e) {
                 Log.e(TAG, "处理选中区域失败: " + e.getMessage());
+                // 发送错误信息
+                Intent intent = new Intent(FloatingWindowService.ACTION_UPDATE_ANSWER);
+                intent.putExtra(FloatingWindowService.EXTRA_ANSWER, "处理图片失败，请重新截图");
+                sendBroadcast(intent);
             } finally {
                 // 释放OCR资源
                 if (ocrHelper != null) {

@@ -1,0 +1,17 @@
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@android:color/holo_green_light" />
+    <foreground>
+        <vector xmlns:android="http://schemas.android.com/apk/res/android"
+            android:width="108dp"
+            android:height="108dp"
+            android:viewportWidth="108"
+            android:viewportHeight="108">
+            <path
+                android:fillColor="@android:color/white"
+                android:pathData="M54,18L72,42V84H36V42L54,18Z" />
+            <path
+                android:fillColor="@android:color/white"
+                android:pathData="M54,27L45,42H63L54,27Z" />
+        </vector>
+    </foreground>
+</adaptive-icon>

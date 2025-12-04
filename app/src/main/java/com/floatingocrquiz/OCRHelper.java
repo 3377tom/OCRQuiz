@@ -6,7 +6,8 @@ import android.util.Log;
 
 import com.baidu.ocr.sdk.OCR;
 import com.baidu.ocr.sdk.OnResultListener;
-import com.baidu.ocr.sdk.exception.OCRError;
+import com.baidu.ocr.sdk.OCRError;
+import com.baidu.ocr.sdk.AccessToken;
 import com.baidu.ocr.sdk.model.GeneralBasicParams;
 import com.baidu.ocr.sdk.model.GeneralResult;
 import com.baidu.ocr.sdk.model.WordSimple;
@@ -39,9 +40,9 @@ public class OCRHelper {
     private void initBaiduOCR() {
         // 使用自定义License文件名：aip-ocr.license
         // 确保该文件已放置在assets目录下
-        OCR.getInstance(context).initAccessToken(new OnResultListener<String>() {
+        OCR.getInstance(context).initAccessToken(new OnResultListener<AccessToken>() {
             @Override
-            public void onResult(String accessToken) {
+            public void onResult(AccessToken accessToken) {
                 // 初始化成功，accessToken会自动管理，无需手动维护
                 Log.d(TAG, "百度OCR SDK初始化成功");
             }

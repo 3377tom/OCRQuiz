@@ -1,0 +1,71 @@
+# 题库示例文件
+# 格式说明：
+# 1. 问题以 "Q: [类型] " 开头，类型可以是：
+#    - SINGLE: 单选题
+#    - MULTIPLE: 多选题
+#    - TRUE_FALSE: 判断题
+#    - SHORT: 简答题
+# 2. 选项以 "选项字母. " 开头（如 A. B. C. D.）
+# 3. 答案以 "A: " 开头，多选题用逗号分隔选项字母
+
+# 单选题示例
+Q: SINGLE 以下哪个是Java的基本数据类型？
+A. String
+B. int
+C. Integer
+D. ArrayList
+A: B
+
+# 多选题示例
+Q: MULTIPLE 计算机的基本组成部分包括哪些？
+A. 中央处理器（CPU）
+B. 内存（RAM）
+C. 硬盘
+D. 显示器
+A: A,B,C,D
+
+# 判断题示例
+Q: TRUE_FALSE Android系统是由Google开发的。
+A: TRUE
+
+# 简答题示例
+Q: SHORT 2+2等于多少？
+A: 4
+
+# 更多示例题目
+Q: SINGLE 中国的首都是哪里？
+A. 上海
+B. 北京
+C. 广州
+D. 深圳
+A: B
+
+Q: TRUE_FALSE Java是一种面向对象的编程语言。
+A: TRUE
+
+Q: MULTIPLE 以下哪些是Java的特性？
+A. 平台无关性
+B. 面向对象
+C. 静态类型
+D. 垃圾回收
+A: A,B,C,D
+
+Q: SINGLE 哪个公司开发了Android操作系统？
+A. Apple
+B. Microsoft
+C. Google
+D. Samsung
+A: C
+
+Q: SHORT 计算机网络OSI模型有几层？
+A: 7层
+
+Q: TRUE_FALSE 1GB等于1024MB。
+A: TRUE
+
+Q: SINGLE 以下哪个不是编程语言？
+A. Java
+B. Python
+C. HTML
+D. C++
+A: C

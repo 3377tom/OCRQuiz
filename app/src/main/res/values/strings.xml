@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Floating OCR Quiz</string>
+    <string name="start_floating_window">启动浮动窗口</string>
+    <string name="stop_floating_window">停止浮动窗口</string>
+    <string name="wait_recognition">等待识别题目...</string>
+    <string name="capturing">正在截图...</string>
+    <string name="capture_button">截图识别</string>
+    <string name="answer_prefix">答案: </string>
+    <string name="overlay_permission_denied">需要悬浮窗权限才能使用此功能</string>
+    <string name="media_projection_permission_denied">需要屏幕录制权限才能使用截图功能</string>
+    <string name="ocr_failed">OCR识别失败</string>
+</resources>

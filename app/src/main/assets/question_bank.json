@@ -1,0 +1,82 @@
+{
+  "questions": [
+    {
+      "id": 1,
+      "type": "SINGLE",
+      "question": "Android开发中，以下哪个不是四大组件？",
+      "options": [
+        "Activity",
+        "Service",
+        "Fragment",
+        "ContentProvider"
+      ],
+      "answer": "C"
+    },
+    {
+      "id": 2,
+      "type": "MULTIPLE",
+      "question": "Java语言的特点包括以下哪些？",
+      "options": [
+        "面向对象",
+        "平台无关性",
+        "解释执行",
+        "指针操作"
+      ],
+      "answer": "A,B,C"
+    },
+    {
+      "id": 3,
+      "type": "TRUE_FALSE",
+      "question": "Android应用的界面布局文件存放在res/layout目录下。",
+      "answer": "TRUE"
+    },
+    {
+      "id": 4,
+      "type": "SHORT",
+      "question": "简述Activity的生命周期。",
+      "answer": "Activity生命周期包括：onCreate() - 创建时调用；onStart() - 可见但不可交互；onResume() - 可见且可交互；onPause() - 失去焦点但可见；onStop() - 完全不可见；onDestroy() - 销毁前调用；onRestart() - 从停止状态重新启动。"
+    },
+    {
+      "id": 5,
+      "type": "SINGLE",
+      "question": "在Android中，用于存储轻量级键值对数据的组件是？",
+      "options": [
+        "SQLite",
+        "SharedPreferences",
+        "ContentProvider",
+        "File"
+      ],
+      "answer": "B"
+    },
+    {
+      "id": 6,
+      "type": "MULTIPLE",
+      "question": "以下哪些是OCR技术的应用场景？",
+      "options": [
+        "文字识别",
+        "图像分类",
+        "文档扫描",
+        "车牌识别"
+      ],
+      "answer": "A,C,D"
+    },
+    {
+      "id": 7,
+      "type": "TRUE_FALSE",
+      "question": "Java中的final关键字可以修饰类、方法和变量。",
+      "answer": "TRUE"
+    },
+    {
+      "id": 8,
+      "type": "SINGLE",
+      "question": "计算机网络中，HTTP协议默认使用的端口号是？",
+      "options": [
+        "80",
+        "443",
+        "8080",
+        "21"
+      ],
+      "answer": "A"
+    }
+  ]
+}

@@ -9,6 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: ocr  # 指定使用名为"ocr"的Environment
     permissions:
       contents: read
       packages: write
@@ -30,11 +31,26 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
 
-      - name: Build with Gradle
-        run: ./gradlew assembleDebug
+      - name: Prepare keystore file
+        run: |
+          echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > my-release-key.jks
+          echo "KEYSTORE_FILE_PATH=$(pwd)/my-release-key.jks" >> $GITHUB_ENV
 
-      - name: Upload APK artifact
+      - name: Build with Gradle (Release)
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew assembleRelease
+
+      - name: Upload Debug APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
           path: app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Upload Release APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: app/build/outputs/apk/release/app-release.apk

@@ -2,82 +2,78 @@ package com.floatingocrquiz;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.util.Base64;
 import android.util.Log;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.baidu.ocr.sdk.OCR;
+import com.baidu.ocr.sdk.OnResultListener;
+import com.baidu.ocr.sdk.exception.OCRError;
+import com.baidu.ocr.sdk.model.GeneralBasicParams;
+import com.baidu.ocr.sdk.model.GeneralResult;
+import com.baidu.ocr.sdk.model.WordSimple;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import java.util.List;
 
 public class OCRHelper {
 
     private static final String TAG = "OCRHelper";
-    private static final String API_URL = "https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic";
-    
-    private OkHttpClient client;
-    private String accessToken;
-    
-    public OCRHelper(Context context) {
-        // 初始化OkHttpClient
-        client = new OkHttpClient.Builder()
-                .connectTimeout(10, TimeUnit.SECONDS)
-                .readTimeout(10, TimeUnit.SECONDS)
-                .writeTimeout(10, TimeUnit.SECONDS)
-                .build();
-        
-        // 从配置中获取AccessToken
-        // 实际使用时，应该从安全的地方获取，这里仅作为示例
-        accessToken = "your_baidu_ocr_access_token";
-    }
+    private Context context;
     
     /**
-     * 设置百度OCR的AccessToken
-     * @param token AccessToken
+     * 初始化OCRHelper
+     * @param context 上下文
      */
-    public void setAccessToken(String token) {
-        this.accessToken = token;
+    public OCRHelper(Context context) {
+        this.context = context;
+        
+        // 初始化百度OCR SDK
+        initBaiduOCR();
     }
     
     /**
-     * 识别图片中的文字
+     * 初始化百度OCR SDK
+     * 使用License文件进行授权，避免直接暴露API Key/Secret Key
+     */
+    private void initBaiduOCR() {
+        // 使用自定义License文件名：aip-ocr.license
+        // 确保该文件已放置在assets目录下
+        OCR.getInstance(context).initAccessTokenWithFile("aip-ocr.license", new OnResultListener<String>() {
+            @Override
+            public void onResult(String accessToken) {
+                // 初始化成功，accessToken会自动管理，无需手动维护
+                Log.d(TAG, "百度OCR SDK初始化成功");
+            }
+            
+            @Override
+            public void onError(OCRError error) {
+                // 初始化失败
+                Log.e(TAG, "百度OCR SDK初始化失败: " + error.getMessage());
+                Log.e(TAG, "错误码: " + error.getErrorCode());
+                Log.e(TAG, "错误描述: " + error.getErrorMessage());
+            }
+        }, context);
+    }
+    
+    /**
+     * 识别图片中的文字（同步方法）
      * @param bitmap 图片
      * @return 识别结果
      */
     public String recognizeText(Bitmap bitmap) {
         try {
-            // 将Bitmap转换为Base64编码
-            String imageBase64 = bitmapToBase64(bitmap);
+            // 构建通用文字识别参数
+            GeneralBasicParams params = new GeneralBasicParams();
+            params.setDetectDirection(true);
+            params.setLanguageType(GeneralBasicParams.LANGUAGE_TYPE_CHN_ENG);
+            params.setRecognizeGranularity(GeneralBasicParams.GRANULARITY_SMALL);
+            params.setImage(bitmap);
             
-            // 构建请求参数
-            String params = "image=" + Base64.encodeToString(imageBase64.getBytes(), Base64.URL_SAFE)
-                    + "&language_type=CHN_ENG";
+            // 同步调用识别接口
+            GeneralResult result = OCR.getInstance(context).recognizeGeneralBasicSync(params);
             
-            // 构建请求
-            Request request = new Request.Builder()
-                    .url(API_URL + "?access_token=" + accessToken)
-                    .post(RequestBody.create(params, MediaType.parse("application/x-www-form-urlencoded")))
-                    .build();
-            
-            // 同步执行请求
-            Response response = client.newCall(request).execute();
-            
-            if (response.isSuccessful()) {
-                String responseBody = response.body().string();
-                return parseOcrResponse(responseBody);
+            if (result != null && result.getWordList() != null) {
+                return formatResult(result);
             } else {
-                Log.e(TAG, "OCR请求失败: " + response.code() + " " + response.message());
+                Log.e(TAG, "OCR识别结果为空");
                 return "";
             }
         } catch (Exception e) {
@@ -87,43 +83,36 @@ public class OCRHelper {
     }
     
     /**
-     * 异步识别图片中的文字
+     * 识别图片中的文字（异步方法）
      * @param bitmap 图片
      * @param callback 回调
      */
     public void recognizeTextAsync(Bitmap bitmap, final OcrCallback callback) {
         try {
-            // 将Bitmap转换为Base64编码
-            String imageBase64 = bitmapToBase64(bitmap);
+            // 构建通用文字识别参数
+            GeneralBasicParams params = new GeneralBasicParams();
+            params.setDetectDirection(true);
+            params.setLanguageType(GeneralBasicParams.LANGUAGE_TYPE_CHN_ENG);
+            params.setRecognizeGranularity(GeneralBasicParams.GRANULARITY_SMALL);
+            params.setImage(bitmap);
             
-            // 构建请求参数
-            String params = "image=" + Base64.encodeToString(imageBase64.getBytes(), Base64.URL_SAFE)
-                    + "&language_type=CHN_ENG";
-            
-            // 构建请求
-            Request request = new Request.Builder()
-                    .url(API_URL + "?access_token=" + accessToken)
-                    .post(RequestBody.create(params, MediaType.parse("application/x-www-form-urlencoded")))
-                    .build();
-            
-            // 异步执行请求
-            client.newCall(request).enqueue(new Callback() {
+            // 异步调用识别接口
+            OCR.getInstance(context).recognizeGeneralBasic(params, new OnResultListener<GeneralResult>() {
                 @Override
-                public void onFailure(Call call, IOException e) {
-                    Log.e(TAG, "OCR请求失败: " + e.getMessage());
-                    callback.onOcrComplete("");
+                public void onResult(GeneralResult result) {
+                    if (result != null && result.getWordList() != null) {
+                        callback.onOcrComplete(formatResult(result));
+                    } else {
+                        callback.onOcrComplete("");
+                    }
                 }
                 
                 @Override
-                public void onResponse(Call call, Response response) throws IOException {
-                    if (response.isSuccessful()) {
-                        String responseBody = response.body().string();
-                        String result = parseOcrResponse(responseBody);
-                        callback.onOcrComplete(result);
-                    } else {
-                        Log.e(TAG, "OCR请求失败: " + response.code() + " " + response.message());
-                        callback.onOcrComplete("");
-                    }
+                public void onError(OCRError error) {
+                    Log.e(TAG, "OCR识别失败: " + error.getMessage());
+                    Log.e(TAG, "错误码: " + error.getErrorCode());
+                    Log.e(TAG, "错误描述: " + error.getErrorMessage());
+                    callback.onOcrComplete("");
                 }
             });
         } catch (Exception e) {
@@ -133,39 +122,26 @@ public class OCRHelper {
     }
     
     /**
-     * 将Bitmap转换为Base64编码
-     * @param bitmap 图片
-     * @return Base64编码的字符串
+     * 格式化识别结果
+     * @param result 识别结果
+     * @return 格式化后的文本
      */
-    private String bitmapToBase64(Bitmap bitmap) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos);
-        byte[] bytes = baos.toByteArray();
-        return Base64.encodeToString(bytes, Base64.DEFAULT);
+    private String formatResult(GeneralResult result) {
+        List<WordSimple> wordList = result.getWordList();
+        StringBuilder sb = new StringBuilder();
+        
+        for (WordSimple word : wordList) {
+            sb.append(word.getWords()).append("\n");
+        }
+        
+        return sb.toString().trim();
     }
     
     /**
-     * 解析OCR响应
-     * @param response 响应字符串
-     * @return 识别的文字
+     * 释放OCR资源
      */
-    private String parseOcrResponse(String response) {
-        try {
-            JSONObject jsonObject = new JSONObject(response);
-            JSONArray wordsResult = jsonObject.getJSONArray("words_result");
-            
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < wordsResult.length(); i++) {
-                JSONObject wordObject = wordsResult.getJSONObject(i);
-                String word = wordObject.getString("words");
-                sb.append(word).append("\n");
-            }
-            
-            return sb.toString().trim();
-        } catch (JSONException e) {
-            Log.e(TAG, "解析OCR响应失败: " + e.getMessage());
-            return "";
-        }
+    public void release() {
+        OCR.getInstance(context).release();
     }
     
     /**

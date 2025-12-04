@@ -254,9 +254,10 @@ public class ScreenCaptureService extends Service {
 
     private void processSelectedRegion(Bitmap selectedBitmap) {
         executorService.execute(() -> {
+            OCRHelper ocrHelper = null;
             try {
                 // 调用OCR进行文字识别
-                OCRHelper ocrHelper = new OCRHelper(this);
+                ocrHelper = new OCRHelper(this);
                 String recognizedText = ocrHelper.recognizeText(selectedBitmap);
 
                 if (!recognizedText.isEmpty()) {
@@ -271,6 +272,11 @@ public class ScreenCaptureService extends Service {
                 }
             } catch (Exception e) {
                 Log.e(TAG, "处理选中区域失败: " + e.getMessage());
+            } finally {
+                // 释放OCR资源
+                if (ocrHelper != null) {
+                    ocrHelper.release();
+                }
             }
         });
     }

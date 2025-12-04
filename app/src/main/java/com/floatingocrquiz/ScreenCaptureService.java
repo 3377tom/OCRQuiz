@@ -41,6 +41,10 @@ public class ScreenCaptureService extends Service {
     private static final String TAG = "ScreenCaptureService";
     private static final int VIRTUAL_DISPLAY_FLAGS = DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR;
     private static final String VIRTUAL_DISPLAY_NAME = "ScreenCapture";
+    
+    // Intent extra constants
+    public static final String EXTRA_RESULT_CODE = "RESULT_CODE";
+    public static final String EXTRA_RESULT_INTENT = "RESULT_INTENT";
 
     private MediaProjectionManager mediaProjectionManager;
     private MediaProjection mediaProjection;
@@ -77,8 +81,8 @@ public class ScreenCaptureService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null) {
-            int resultCode = intent.getIntExtra("RESULT_CODE", 0);
-            Intent data = intent.getParcelableExtra("RESULT_INTENT");
+            int resultCode = intent.getIntExtra(EXTRA_RESULT_CODE, 0);
+            Intent data = intent.getParcelableExtra(EXTRA_RESULT_INTENT);
 
             if (resultCode != 0 && data != null) {
                 // 已有权限，直接开始截图

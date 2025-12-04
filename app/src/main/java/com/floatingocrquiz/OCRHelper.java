@@ -48,7 +48,7 @@ public class OCRHelper {
                 // 初始化失败
                 Log.e(TAG, "百度OCR SDK初始化失败: " + error.getMessage());
                 Log.e(TAG, "错误码: " + error.getErrorCode());
-                Log.e(TAG, "错误描述: " + error.getErrorMessage());
+                // getErrorMessage()方法不存在，使用getMessage()即可
             }
         }, context);
     }
@@ -63,9 +63,14 @@ public class OCRHelper {
             // 构建通用文字识别参数
             GeneralBasicParams params = new GeneralBasicParams();
             params.setDetectDirection(true);
-            params.setLanguageType(GeneralBasicParams.LANGUAGE_TYPE_CHN_ENG);
-            params.setRecognizeGranularity(GeneralBasicParams.GRANULARITY_SMALL);
-            params.setImage(bitmap);
+            // LANGUAGE_TYPE_CHN_ENG常量不存在，直接使用字符串值
+            params.setLanguageType("CHN_ENG");
+            // GRANULARITY_SMALL常量不存在，直接使用字符串值
+            params.setRecognizeGranularity("small");
+            // setImage()方法不存在，使用setImageFile()并传入文件路径
+            // 先将Bitmap保存为临时文件
+            String tempFilePath = BitmapUtils.saveBitmapToTempFile(bitmap, context);
+            params.setImageFile(tempFilePath);
             
             // 同步调用识别接口
             GeneralResult result = OCR.getInstance(context).recognizeGeneralBasicSync(params);
@@ -92,9 +97,14 @@ public class OCRHelper {
             // 构建通用文字识别参数
             GeneralBasicParams params = new GeneralBasicParams();
             params.setDetectDirection(true);
-            params.setLanguageType(GeneralBasicParams.LANGUAGE_TYPE_CHN_ENG);
-            params.setRecognizeGranularity(GeneralBasicParams.GRANULARITY_SMALL);
-            params.setImage(bitmap);
+            // LANGUAGE_TYPE_CHN_ENG常量不存在，直接使用字符串值
+            params.setLanguageType("CHN_ENG");
+            // GRANULARITY_SMALL常量不存在，直接使用字符串值
+            params.setRecognizeGranularity("small");
+            // setImage()方法不存在，使用setImageFile()并传入文件路径
+            // 先将Bitmap保存为临时文件
+            String tempFilePath = BitmapUtils.saveBitmapToTempFile(bitmap, context);
+            params.setImageFile(tempFilePath);
             
             // 异步调用识别接口
             OCR.getInstance(context).recognizeGeneralBasic(params, new OnResultListener<GeneralResult>() {
@@ -111,7 +121,7 @@ public class OCRHelper {
                 public void onError(OCRError error) {
                     Log.e(TAG, "OCR识别失败: " + error.getMessage());
                     Log.e(TAG, "错误码: " + error.getErrorCode());
-                    Log.e(TAG, "错误描述: " + error.getErrorMessage());
+                    // getErrorMessage()方法不存在，使用getMessage()即可
                     callback.onOcrComplete("");
                 }
             });
@@ -127,7 +137,8 @@ public class OCRHelper {
      * @return 格式化后的文本
      */
     private String formatResult(GeneralResult result) {
-        List<WordSimple> wordList = result.getWordList();
+        // 使用泛型避免类型转换错误
+        List<? extends WordSimple> wordList = result.getWordList();
         StringBuilder sb = new StringBuilder();
         
         for (WordSimple word : wordList) {

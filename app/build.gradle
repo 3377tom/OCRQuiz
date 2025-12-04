@@ -19,10 +19,13 @@ android {
     // 签名配置
     signingConfigs {
         release {
-            storeFile file(System.getenv("KEYSTORE_FILE_PATH"))
-            storePassword System.getenv("KEYSTORE_PASSWORD")
-            keyAlias System.getenv("KEY_ALIAS")
-            keyPassword System.getenv("KEY_PASSWORD")
+            def keystoreFilePath = System.getenv("KEYSTORE_FILE_PATH")
+            if (keystoreFilePath != null && keystoreFilePath.trim() != "") {
+                storeFile file(keystoreFilePath)
+                storePassword System.getenv("KEYSTORE_PASSWORD")
+                keyAlias System.getenv("KEY_ALIAS")
+                keyPassword System.getenv("KEY_PASSWORD")
+            }
         }
     }
 
@@ -30,7 +33,10 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+            def keystoreFilePath = System.getenv("KEYSTORE_FILE_PATH")
+            if (keystoreFilePath != null && keystoreFilePath.trim() != "") {
+                signingConfig signingConfigs.release
+            }
         }
     }
     compileOptions {

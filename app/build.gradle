@@ -42,12 +42,6 @@ android {
             excludes += ['META-INF/DEPENDENCIES']
         }
     }
-    
-    repositories {
-        flatDir {
-            dirs 'libs'
-        }
-    }
 }
 
 dependencies {

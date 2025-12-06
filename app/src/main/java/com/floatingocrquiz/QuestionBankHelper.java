@@ -28,7 +28,7 @@ public class QuestionBankHelper {
         this.context = context;
         this.questionList = new ArrayList<>();
         loadQuestionBank();
-30|     }
+    }
     
     /**
      * 获取QuestionBankHelper实例（单例模式）

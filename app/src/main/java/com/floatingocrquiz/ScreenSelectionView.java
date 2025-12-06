@@ -38,8 +38,13 @@ public class ScreenSelectionView extends View {
         this.screenBitmap = bitmap;
         this.onSelectionCompleteListener = listener;
         
-        this.screenWidth = bitmap.getWidth();
-        this.screenHeight = bitmap.getHeight();
+        if (bitmap != null) {
+            this.screenWidth = bitmap.getWidth();
+            this.screenHeight = bitmap.getHeight();
+        } else {
+            this.screenWidth = 0;
+            this.screenHeight = 0;
+        }
         
         initPaints();
     }
@@ -96,6 +101,11 @@ public class ScreenSelectionView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        // 如果没有截图，不处理触摸事件
+        if (screenBitmap == null) {
+            return super.onTouchEvent(event);
+        }
+        
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 isDrawing = true;
@@ -124,16 +134,36 @@ public class ScreenSelectionView extends View {
                     int height = bottom - top;
                     
                     if (width > 50 && height > 50) {
-                        // 创建选择区域的Bitmap
-                        Bitmap selectedBitmap = Bitmap.createBitmap(
-                                screenBitmap,
-                                left, top,
-                                width, height
-                        );
-                        
-                        // 通知选择完成
-                        if (onSelectionCompleteListener != null) {
-                            onSelectionCompleteListener.onSelectionComplete(selectedBitmap);
+                        try {
+                            // 确保选择区域在截图范围内
+                            left = Math.max(0, left);
+                            top = Math.max(0, top);
+                            right = Math.min(screenWidth, right);
+                            bottom = Math.min(screenHeight, bottom);
+                            
+                            width = right - left;
+                            height = bottom - top;
+                            
+                            // 再次检查调整后的区域是否有效
+                            if (width > 0 && height > 0) {
+                                // 创建选择区域的Bitmap
+                                Bitmap selectedBitmap = Bitmap.createBitmap(
+                                        screenBitmap,
+                                        left, top,
+                                        width, height
+                                );
+                                
+                                // 通知选择完成
+                                if (onSelectionCompleteListener != null) {
+                                    onSelectionCompleteListener.onSelectionComplete(selectedBitmap);
+                                }
+                            } else {
+                                // 选择区域太小
+                                Toast.makeText(getContext(), "选择区域太小，请重新选择", Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (Exception e) {
+                            // 处理异常
+                            Toast.makeText(getContext(), "截图处理失败，请重试", Toast.LENGTH_SHORT).show();
                         }
                     } else {
                         // 选择区域太小

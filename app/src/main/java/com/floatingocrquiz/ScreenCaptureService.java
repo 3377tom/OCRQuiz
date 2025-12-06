@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.content.Intent;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
 import android.media.Image;
@@ -19,6 +20,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
+import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
@@ -27,7 +29,9 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.WindowManager.LayoutParams;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -115,7 +119,7 @@ public class ScreenCaptureService extends Service {
             imageReader = ImageReader.newInstance(
                     screenWidth,
                     screenHeight,
-                    0x1,
+                    android.graphics.PixelFormat.RGBA_8888,
                     1
             );
 
@@ -213,6 +217,19 @@ public class ScreenCaptureService extends Service {
     }
 
     private void showScreenSelectionOverlay(Bitmap screenBitmap) {
+        // 检查是否有悬浮窗权限
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(this)) {
+                // 如果没有悬浮窗权限，引导用户开启
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+                intent.setData(android.net.Uri.parse("package:" + getPackageName()));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                Toast.makeText(this, "请开启悬浮窗权限以使用截图功能", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+
         // 创建全屏覆盖层
         WindowManager.LayoutParams overlayParams = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,

@@ -34,8 +34,8 @@ public class MediaProjectionActivity extends AppCompatActivity {
                 
                 // 启动屏幕捕获服务
                 Intent serviceIntent = new Intent(this, ScreenCaptureService.class);
-                serviceIntent.putExtra("RESULT_CODE", resultCode);
-                serviceIntent.putExtra("RESULT_INTENT", data);
+                serviceIntent.putExtra(ScreenCaptureService.EXTRA_RESULT_CODE, resultCode);
+                serviceIntent.putExtra(ScreenCaptureService.EXTRA_RESULT_INTENT, data);
                 startService(serviceIntent);
             } else {
                 Log.d(TAG, "媒体投影权限被拒绝");

@@ -14,6 +14,7 @@
     <!-- 注意：MEDIA_PROJECTION权限不需要在Manifest中声明，而是通过动态请求获取 -->
 
     <application
+        android:name=".OCRApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"

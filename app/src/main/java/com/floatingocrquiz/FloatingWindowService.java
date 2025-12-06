@@ -167,10 +167,18 @@ public class FloatingWindowService extends Service {
     }
 
     private void startScreenCapture() {
-        // 请求屏幕录制权限并开始截图
-        Intent intent = new Intent(this, MediaProjectionActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
+        // 检查OCRApplication中是否已经有MediaProjection实例
+        OCRApplication ocrApplication = (OCRApplication) getApplication();
+        if (ocrApplication.getMediaProjection() != null) {
+            // 如果已经有权限，直接启动ScreenCaptureService
+            Intent intent = new Intent(this, ScreenCaptureService.class);
+            startService(intent);
+        } else {
+            // 否则请求权限
+            Intent intent = new Intent(this, MediaProjectionActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        }
     }
 
     public void updateAnswer(String answer) {

@@ -97,7 +97,15 @@ public class ScreenCaptureService extends Service {
         // 启动前台服务
         startForegroundService();
         
-        if (intent != null) {
+        // 首先检查OCRApplication中是否有缓存的MediaProjection实例
+        OCRApplication ocrApplication = (OCRApplication) getApplication();
+        MediaProjection cachedMediaProjection = ocrApplication.getMediaProjection();
+        
+        if (cachedMediaProjection != null) {
+            // 使用缓存的MediaProjection实例
+            mediaProjection = cachedMediaProjection;
+            startCaptureWithCachedProjection();
+        } else if (intent != null) {
             int resultCode = intent.getIntExtra(EXTRA_RESULT_CODE, 0);
             Intent data = intent.getParcelableExtra(EXTRA_RESULT_INTENT);
 
@@ -150,10 +158,11 @@ public class ScreenCaptureService extends Service {
         startActivity(intent);
     }
 
-    public void startCapture(int resultCode, Intent data) {
+    /**
+     * 使用缓存的MediaProjection实例开始截图
+     */
+    private void startCaptureWithCachedProjection() {
         try {
-            mediaProjection = mediaProjectionManager.getMediaProjection(resultCode, data);
-
             // 创建ImageReader用于捕获屏幕截图
             imageReader = ImageReader.newInstance(
                     screenWidth,
@@ -173,33 +182,75 @@ public class ScreenCaptureService extends Service {
                     null,
                     handler
             );
+            
+            // 设置ImageAvailableListener
+            setImageAvailableListener();
+        } catch (Exception e) {
+            Log.e(TAG, "使用缓存MediaProjection截图失败: " + e.getMessage());
+            // 释放资源
+            releaseMediaProjection();
+            // 重新请求权限
+            requestMediaProjectionPermission();
+        }
+    }
+    
+    /**
+     * 设置ImageAvailableListener
+     */
+    private void setImageAvailableListener() {
+        imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
+            @Override
+            public void onImageAvailable(ImageReader reader) {
+                try {
+                    Image image = reader.acquireLatestImage();
+                    if (image != null) {
+                        Bitmap bitmap = imageToBitmap(image);
+                        image.close();
+                        
+                        // 显示屏幕选择覆盖层
+                        showScreenSelectionOverlay(bitmap);
+                        
+                        // 停止虚拟显示（只需要一次截图）
+                        stopVirtualDisplay();
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "获取截图失败: " + e.getMessage());
+                    stopSelf();
+                }
+            }
+        }, handler);
+    }
+    
+    public void startCapture(int resultCode, Intent data) {
+        try {
+            mediaProjection = mediaProjectionManager.getMediaProjection(resultCode, data);
+            
+            // 将MediaProjection实例保存到OCRApplication中
+            OCRApplication ocrApplication = (OCRApplication) getApplication();
+            ocrApplication.setMediaProjection(mediaProjection);
+
+            // 创建ImageReader用于捕获屏幕截图
+            imageReader = ImageReader.newInstance(
+                    screenWidth,
+                    screenHeight,
+                    android.graphics.PixelFormat.RGBA_8888,
+                    1
+            );
 
             // 设置ImageAvailableListener
-            imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
-                @Override
-                public void onImageAvailable(ImageReader reader) {
-                    Image image = null;
-                    try {
-                        image = reader.acquireLatestImage();
-                        if (image != null) {
-                            Bitmap bitmap = imageToBitmap(image);
-                            if (bitmap != null) {
-                                showScreenSelectionOverlay(bitmap);
-                            } else {
-                                Log.e(TAG, "图像转换为Bitmap失败");
-                            }
-                        }
-                    } catch (Exception e) {
-                        Log.e(TAG, "处理图像失败: " + e.getMessage());
-                    } finally {
-                        if (image != null) {
-                            image.close();
-                        }
-                        // 只释放虚拟显示和ImageReader，保留媒体投影
-                        releaseVirtualDisplay();
-                    }
-                }
-            }, handler);
+            setImageAvailableListener();
+
+            // 创建虚拟显示
+            virtualDisplay = mediaProjection.createVirtualDisplay(
+                    VIRTUAL_DISPLAY_NAME,
+                    screenWidth,
+                    screenHeight,
+                    screenDensity,
+                    VIRTUAL_DISPLAY_FLAGS,
+                    imageReader.getSurface(),
+                    null,
+                    handler
+            );
 
             // 延迟一下确保截图完成
             handler.postDelayed(new Runnable() {

@@ -168,8 +168,9 @@ public class FloatingWindowService extends Service {
 
     private void startScreenCapture() {
         // 请求屏幕录制权限并开始截图
-        Intent intent = new Intent(this, ScreenCaptureService.class);
-        startService(intent);
+        Intent intent = new Intent(this, MediaProjectionActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
     }
 
     public void updateAnswer(String answer) {

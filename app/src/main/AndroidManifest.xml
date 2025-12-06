@@ -39,7 +39,7 @@
         <activity
             android:name=".MediaProjectionActivity"
             android:exported="false"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+            android:theme="@style/Theme.Transparent" />
 
         <!-- 浮动窗口服务 -->
         <service

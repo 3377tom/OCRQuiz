@@ -211,7 +211,7 @@ public class ScreenCaptureService extends Service {
                         showScreenSelectionOverlay(bitmap);
                         
                         // 停止虚拟显示（只需要一次截图）
-                        stopVirtualDisplay();
+                        releaseVirtualDisplay();
                     }
                 } catch (Exception e) {
                     Log.e(TAG, "获取截图失败: " + e.getMessage());

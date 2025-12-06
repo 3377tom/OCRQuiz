@@ -1,5 +1,8 @@
 package com.floatingocrquiz;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -47,6 +50,11 @@ public class ScreenCaptureService extends Service {
     // Intent extra constants
     public static final String EXTRA_RESULT_CODE = "RESULT_CODE";
     public static final String EXTRA_RESULT_INTENT = "RESULT_INTENT";
+    
+    // 前台服务通知常量
+    private static final int NOTIFICATION_ID = 1;
+    private static final String CHANNEL_ID = "screen_capture_channel";
+    private static final String CHANNEL_NAME = "屏幕捕获服务";
 
     private MediaProjectionManager mediaProjectionManager;
     private MediaProjection mediaProjection;
@@ -64,10 +72,6 @@ public class ScreenCaptureService extends Service {
     private int screenWidth;
     private int screenHeight;
     private int screenDensity;
-
-    // 保存媒体投影权限结果
-    private int savedResultCode = 0;
-    private Intent savedResultData = null;
 
     @Override
     public void onCreate() {
@@ -90,38 +94,54 @@ public class ScreenCaptureService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        // 启动前台服务
+        startForegroundService();
+        
         if (intent != null) {
             int resultCode = intent.getIntExtra(EXTRA_RESULT_CODE, 0);
             Intent data = intent.getParcelableExtra(EXTRA_RESULT_INTENT);
 
             if (resultCode != 0 && data != null) {
-                // 保存权限结果
-                savedResultCode = resultCode;
-                savedResultData = data;
                 // 开始截图
                 startCapture(resultCode, data);
             } else {
-                // 检查是否已有保存的权限
-                if (savedResultCode != 0 && savedResultData != null) {
-                    // 使用已保存的权限开始截图
-                    startCapture(savedResultCode, savedResultData);
-                } else {
-                    // 请求屏幕录制权限
-                    requestMediaProjectionPermission();
-                }
-            }
-        } else {
-            // 检查是否已有保存的权限
-            if (savedResultCode != 0 && savedResultData != null) {
-                // 使用已保存的权限开始截图
-                startCapture(savedResultCode, savedResultData);
-            } else {
-                // 请求屏幕录制权限
+                // 没有有效的权限数据，重新请求权限
                 requestMediaProjectionPermission();
             }
+        } else {
+            // 没有有效的权限数据，重新请求权限
+            requestMediaProjectionPermission();
         }
 
         return START_NOT_STICKY;
+    }
+    
+    /**
+     * 启动前台服务
+     */
+    private void startForegroundService() {
+        // 创建通知渠道（Android 8.0+）
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    CHANNEL_ID,
+                    CHANNEL_NAME,
+                    NotificationManager.IMPORTANCE_LOW
+            );
+            channel.setDescription("用于屏幕截图的前台服务");
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+        
+        // 创建通知
+        Notification notification = new Notification.Builder(this, CHANNEL_ID)
+                .setContentTitle("屏幕捕获")
+                .setContentText("正在准备截图")
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                .setPriority(Notification.PRIORITY_LOW)
+                .build();
+        
+        // 启动前台服务
+        startForeground(NOTIFICATION_ID, notification);
     }
 
     private void requestMediaProjectionPermission() {
@@ -389,6 +409,8 @@ public class ScreenCaptureService extends Service {
         }
     }
 
+
+    
     private void releaseMediaProjection() {
         releaseVirtualDisplay();
 
@@ -396,9 +418,6 @@ public class ScreenCaptureService extends Service {
             if (mediaProjection != null) {
                 mediaProjection.stop();
                 mediaProjection = null;
-                // 清除保存的权限
-                savedResultCode = 0;
-                savedResultData = null;
             }
         } catch (Exception e) {
             Log.e(TAG, "停止媒体投影失败: " + e.getMessage());
@@ -423,6 +442,9 @@ public class ScreenCaptureService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        
+        // 停止前台服务
+        stopForeground(true);
         
         // 移除覆盖层
         removeScreenSelectionOverlay();

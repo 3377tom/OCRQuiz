@@ -176,4 +176,26 @@ public class ScreenSelectionView extends View {
                 return super.onTouchEvent(event);
         }
     }
+    
+    /**
+     * 获取选择的矩形区域
+     * @return 选择的矩形区域，如果没有选择则返回null
+     */
+    public Rect getSelectionRect() {
+        if (startPoint != null && endPoint != null) {
+            int left = Math.min(startPoint.x, endPoint.x);
+            int top = Math.min(startPoint.y, endPoint.y);
+            int right = Math.max(startPoint.x, endPoint.x);
+            int bottom = Math.max(startPoint.y, endPoint.y);
+            
+            // 确保选择区域在截图范围内
+            left = Math.max(0, left);
+            top = Math.max(0, top);
+            right = Math.min(screenWidth, right);
+            bottom = Math.min(screenHeight, bottom);
+            
+            return new Rect(left, top, right, bottom);
+        }
+        return null;
+    }
 }

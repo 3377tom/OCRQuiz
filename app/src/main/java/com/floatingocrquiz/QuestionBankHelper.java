@@ -20,13 +20,26 @@ public class QuestionBankHelper {
     private static final String TAG = "QuestionBankHelper";
     private static final String FILE_NAME = "question_bank.json";
     
+    private static QuestionBankHelper instance;
     private List<Question> questionList;
     private Context context;
 
-    public QuestionBankHelper(Context context) {
+    private QuestionBankHelper(Context context) {
         this.context = context;
         this.questionList = new ArrayList<>();
         loadQuestionBank();
+30|     }
+    
+    /**
+     * 获取QuestionBankHelper实例（单例模式）
+     * @param context 上下文
+     * @return QuestionBankHelper实例
+     */
+    public static synchronized QuestionBankHelper getInstance(Context context) {
+        if (instance == null) {
+            instance = new QuestionBankHelper(context);
+        }
+        return instance;
     }
 
     /**

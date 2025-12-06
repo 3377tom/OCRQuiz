@@ -57,6 +57,10 @@ public class ScreenCaptureService extends Service {
     private WindowManager windowManager;
     private ExecutorService executorService;
 
+    // 覆盖层相关
+    private View screenSelectionOverlay;
+    private ScreenSelectionView selectionView;
+
     private int screenWidth;
     private int screenHeight;
     private int screenDensity;
@@ -274,6 +278,9 @@ public class ScreenCaptureService extends Service {
         }
 
         try {
+            // 先移除旧的覆盖层（如果存在）
+            removeScreenSelectionOverlay();
+
             // 创建全屏覆盖层
             WindowManager.LayoutParams overlayParams = new WindowManager.LayoutParams(
                     WindowManager.LayoutParams.MATCH_PARENT,
@@ -294,16 +301,18 @@ public class ScreenCaptureService extends Service {
             overlayLayout.setBackgroundColor(Color.parseColor("#80000000"));
 
             // 添加屏幕选择视图
-            ScreenSelectionView selectionView = new ScreenSelectionView(this, screenBitmap, new ScreenSelectionView.OnSelectionCompleteListener() {
+            selectionView = new ScreenSelectionView(this, screenBitmap, new ScreenSelectionView.OnSelectionCompleteListener() {
                 @Override
                 public void onSelectionComplete(Bitmap selectedBitmap) {
                     try {
                         // 处理选中的截图区域
                         processSelectedRegion(selectedBitmap);
-                        // 移除覆盖层
-                        windowManager.removeView(overlayLayout);
                     } catch (Exception e) {
                         Log.e(TAG, "处理选择区域失败: " + e.getMessage());
+                        Toast.makeText(ScreenCaptureService.this, "截图处理失败，请重试", Toast.LENGTH_SHORT).show();
+                    } finally {
+                        // 移除覆盖层
+                        removeScreenSelectionOverlay();
                     }
                 }
             });
@@ -315,17 +324,22 @@ public class ScreenCaptureService extends Service {
 
             // 添加覆盖层到系统
             windowManager.addView(overlayLayout, overlayParams);
+            screenSelectionOverlay = overlayLayout;
         } catch (Exception e) {
             Log.e(TAG, "显示屏幕选择覆盖层失败: " + e.getMessage());
+            Toast.makeText(this, "截图功能启动失败，请重试", Toast.LENGTH_SHORT).show();
+            // 确保资源被释放
+            if (screenBitmap != null && !screenBitmap.isRecycled()) {
+                screenBitmap.recycle();
+            }
         }
     }
 
     private void processSelectedRegion(Bitmap selectedBitmap) {
         executorService.execute(() -> {
-            OCRHelper ocrHelper = null;
             try {
-                // 调用OCR进行文字识别
-                ocrHelper = new OCRHelper(this);
+                // 调用OCR进行文字识别（使用单例模式）
+                OCRHelper ocrHelper = OCRHelper.getInstance(this);
                 String recognizedText = ocrHelper.recognizeText(selectedBitmap);
 
                 String displayText;
@@ -348,9 +362,9 @@ public class ScreenCaptureService extends Service {
                 intent.putExtra(FloatingWindowService.EXTRA_ANSWER, "处理图片失败，请重新截图");
                 sendBroadcast(intent);
             } finally {
-                // 释放OCR资源
-                if (ocrHelper != null) {
-                    ocrHelper.release();
+                // 释放Bitmap资源
+                if (selectedBitmap != null && !selectedBitmap.isRecycled()) {
+                    selectedBitmap.recycle();
                 }
             }
         });
@@ -391,13 +405,37 @@ public class ScreenCaptureService extends Service {
         }
     }
 
+    private void removeScreenSelectionOverlay() {
+        try {
+            if (screenSelectionOverlay != null) {
+                windowManager.removeView(screenSelectionOverlay);
+                screenSelectionOverlay = null;
+                Log.i(TAG, "屏幕选择覆盖层已移除");
+            }
+            if (selectionView != null) {
+                selectionView = null;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "移除屏幕选择覆盖层失败: " + e.getMessage());
+        }
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
+        
+        // 移除覆盖层
+        removeScreenSelectionOverlay();
+        
+        // 释放资源
         releaseMediaProjection();
+        
+        // 停止线程
         if (handlerThread != null) {
             handlerThread.quitSafely();
         }
+        
+        // 关闭线程池
         if (executorService != null) {
             executorService.shutdown();
         }

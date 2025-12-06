@@ -20,17 +20,31 @@ import java.util.concurrent.TimeUnit;
 public class OCRHelper {
 
     private static final String TAG = "OCRHelper";
+    private static OCRHelper instance;
     private Context context;
+    private boolean isInitialized = false;
     
     /**
-     * 初始化OCRHelper
+     * 私有构造函数，防止外部实例化
      * @param context 上下文
      */
-    public OCRHelper(Context context) {
-        this.context = context;
+    private OCRHelper(Context context) {
+        this.context = context.getApplicationContext();
         
         // 初始化百度OCR SDK
         initBaiduOCR();
+    }
+    
+    /**
+     * 获取OCRHelper实例（单例模式）
+     * @param context 上下文
+     * @return OCRHelper实例
+     */
+    public static synchronized OCRHelper getInstance(Context context) {
+        if (instance == null) {
+            instance = new OCRHelper(context);
+        }
+        return instance;
     }
     
     /**
@@ -45,6 +59,7 @@ public class OCRHelper {
             public void onResult(AccessToken accessToken) {
                 // 初始化成功，accessToken会自动管理，无需手动维护
                 Log.d(TAG, "百度OCR SDK初始化成功");
+                isInitialized = true;
             }
             
             @Override
@@ -52,6 +67,7 @@ public class OCRHelper {
                 // 初始化失败
                 Log.e(TAG, "百度OCR SDK初始化失败: " + error.getMessage());
                 Log.e(TAG, "错误码: " + error.getErrorCode());
+                isInitialized = false;
             }
         }, "aip-ocr.license", context);
     }
@@ -62,19 +78,28 @@ public class OCRHelper {
      * @return 识别结果
      */
     public String recognizeText(Bitmap bitmap) {
+        String tempFilePath = null;
         try {
+            if (!isInitialized) {
+                Log.e(TAG, "OCR SDK尚未初始化完成");
+                return "";
+            }
+            
             // 构建通用文字识别参数
             GeneralBasicParams params = new GeneralBasicParams();
             params.setDetectDirection(true);
             // LANGUAGE_TYPE_CHN_ENG常量不存在，直接使用字符串值
             params.setLanguageType("CHN_ENG");
-            // 移除setRecognizeGranularity方法，该方法不存在
+            
             // 先将Bitmap保存为临时文件
-            String tempFilePath = BitmapUtils.saveBitmapToTempFile(bitmap, context);
+            tempFilePath = BitmapUtils.saveBitmapToTempFile(bitmap, context);
             if (tempFilePath != null) {
                 // 将String转换为File对象
                 File imageFile = new File(tempFilePath);
                 params.setImageFile(imageFile);
+            } else {
+                Log.e(TAG, "无法保存临时文件");
+                return "";
             }
             
             // 移除同步调用，使用异步方法
@@ -110,6 +135,11 @@ public class OCRHelper {
         } catch (Exception e) {
             Log.e(TAG, "OCR识别失败: " + e.getMessage());
             return "";
+        } finally {
+            // 识别完成后删除临时文件
+            if (tempFilePath != null) {
+                BitmapUtils.deleteTempFile(tempFilePath);
+            }
         }
     }
     

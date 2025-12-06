@@ -13,6 +13,7 @@ public class MediaProjectionActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_MEDIA_PROJECTION = 1001;
 
     private MediaProjectionManager mediaProjectionManager;
+    private boolean isSettingDefaultRange = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,6 +21,12 @@ public class MediaProjectionActivity extends AppCompatActivity {
         setContentView(R.layout.activity_media_projection);
         
         mediaProjectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
+        
+        // 获取从ScreenCaptureService传递的参数
+        Intent intent = getIntent();
+        if (intent != null && intent.hasExtra("SETTING_DEFAULT_RANGE")) {
+            isSettingDefaultRange = intent.getBooleanExtra("SETTING_DEFAULT_RANGE", false);
+        }
     }
 
     @Override
@@ -43,6 +50,8 @@ public class MediaProjectionActivity extends AppCompatActivity {
                 Intent serviceIntent = new Intent(this, ScreenCaptureService.class);
                 serviceIntent.putExtra(ScreenCaptureService.EXTRA_RESULT_CODE, resultCode);
                 serviceIntent.putExtra(ScreenCaptureService.EXTRA_RESULT_INTENT, data);
+                // 传递设置默认截图范围的参数
+                serviceIntent.putExtra("SETTING_DEFAULT_RANGE", isSettingDefaultRange);
                 startService(serviceIntent);
             } else {
                 Log.d(TAG, "媒体投影权限被拒绝");

@@ -41,6 +41,12 @@ public class FloatingWindowService extends Service {
     private View floatingView;
     private TextView answerTextView;
     private Button captureButton;
+    private Button settingsButton;
+    
+    // 默认截图范围设置
+    private static final String PREFS_NAME = "ScreenshotPrefs";
+    private static final String PREF_DEFAULT_RECT = "defaultRect";
+    private boolean isSettingDefaultRange = false;
 
     private boolean isWindowShowing = false;
 
@@ -127,11 +133,20 @@ public class FloatingWindowService extends Service {
         floatingView = LayoutInflater.from(this).inflate(R.layout.floating_window, null);
         answerTextView = floatingView.findViewById(R.id.answer_text);
         captureButton = floatingView.findViewById(R.id.capture_button);
+        settingsButton = floatingView.findViewById(R.id.settings_button);
 
-        // 设置按钮点击事件
+        // 设置截图按钮点击事件
         captureButton.setOnClickListener(v -> {
             answerTextView.setText(R.string.capturing);
             // 启动屏幕捕获功能
+            startScreenCapture();
+        });
+        
+        // 设置截图范围按钮点击事件
+        settingsButton.setOnClickListener(v -> {
+            answerTextView.setText("请选择默认截图范围");
+            isSettingDefaultRange = true;
+            // 启动屏幕捕获功能用于设置默认范围
             startScreenCapture();
         });
 
@@ -172,10 +187,12 @@ public class FloatingWindowService extends Service {
         if (ocrApplication.getMediaProjection() != null) {
             // 如果已经有权限，直接启动ScreenCaptureService
             Intent intent = new Intent(this, ScreenCaptureService.class);
+            intent.putExtra("SETTING_DEFAULT_RANGE", isSettingDefaultRange);
             startService(intent);
         } else {
             // 否则请求权限
             Intent intent = new Intent(this, MediaProjectionActivity.class);
+            intent.putExtra("SETTING_DEFAULT_RANGE", isSettingDefaultRange);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
         }

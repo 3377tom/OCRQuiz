@@ -55,6 +55,14 @@ public class ScreenCaptureService extends Service {
     private static final int NOTIFICATION_ID = 1;
     private static final String CHANNEL_ID = "screen_capture_channel";
     private static final String CHANNEL_NAME = "屏幕捕获服务";
+    
+    // 默认截图范围相关常量
+    private static final String PREFS_NAME = "ScreenshotPrefs";
+    private static final String PREF_DEFAULT_RECT = "defaultRect";
+    private static final String EXTRA_SETTING_DEFAULT_RANGE = "SETTING_DEFAULT_RANGE";
+    
+    // 是否正在设置默认截图范围
+    private boolean isSettingDefaultRange = false;
 
     private MediaProjectionManager mediaProjectionManager;
     private MediaProjection mediaProjection;
@@ -96,6 +104,11 @@ public class ScreenCaptureService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         // 启动前台服务
         startForegroundService();
+        
+        // 检查是否是设置默认截图范围
+        if (intent != null && intent.hasExtra(EXTRA_SETTING_DEFAULT_RANGE)) {
+            isSettingDefaultRange = intent.getBooleanExtra(EXTRA_SETTING_DEFAULT_RANGE, false);
+        }
         
         // 首先检查OCRApplication中是否有缓存的MediaProjection实例
         OCRApplication ocrApplication = (OCRApplication) getApplication();
@@ -206,6 +219,27 @@ public class ScreenCaptureService extends Service {
                     if (image != null) {
                         Bitmap bitmap = imageToBitmap(image);
                         image.close();
+                        
+                        // 检查是否有默认截图范围且不处于设置模式
+                        Rect defaultRect = loadDefaultRect();
+                        if (defaultRect != null && !isSettingDefaultRange) {
+                            // 使用默认截图范围
+                            try {
+                                Bitmap selectedBitmap = Bitmap.createBitmap(
+                                        bitmap,
+                                        defaultRect.left,
+                                        defaultRect.top,
+                                        defaultRect.width(),
+                                        defaultRect.height()
+                                );
+                                processSelectedRegion(selectedBitmap);
+                                releaseVirtualDisplay();
+                                return;
+                            } catch (Exception e) {
+                                Log.e(TAG, "使用默认截图范围失败: " + e.getMessage());
+                                // 默认范围无效，继续显示选择覆盖层
+                            }
+                        }
                         
                         // 显示屏幕选择覆盖层
                         showScreenSelectionOverlay(bitmap);
@@ -374,8 +408,28 @@ public class ScreenCaptureService extends Service {
                 @Override
                 public void onSelectionComplete(Bitmap selectedBitmap) {
                     try {
-                        // 处理选中的截图区域
-                        processSelectedRegion(selectedBitmap);
+                        if (isSettingDefaultRange) {
+                            // 保存默认截图范围
+                            Rect selectedRect = selectionView.getSelectionRect();
+                            if (selectedRect != null) {
+                                saveDefaultRect(selectedRect);
+                                
+                                // 通知浮动窗口设置成功
+                                Intent intent = new Intent(FloatingWindowService.ACTION_UPDATE_ANSWER);
+                                intent.putExtra(FloatingWindowService.EXTRA_ANSWER, "默认截图范围已设置");
+                                sendBroadcast(intent);
+                                
+                                isSettingDefaultRange = false;
+                            } else {
+                                // 通知浮动窗口设置失败
+                                Intent intent = new Intent(FloatingWindowService.ACTION_UPDATE_ANSWER);
+                                intent.putExtra(FloatingWindowService.EXTRA_ANSWER, "默认截图范围设置失败");
+                                sendBroadcast(intent);
+                            }
+                        } else {
+                            // 正常处理选中的截图区域
+                            processSelectedRegion(selectedBitmap);
+                        }
                     } catch (Exception e) {
                         Log.e(TAG, "处理选择区域失败: " + e.getMessage());
                         Toast.makeText(ScreenCaptureService.this, "截图处理失败，请重试", Toast.LENGTH_SHORT).show();
@@ -413,8 +467,10 @@ public class ScreenCaptureService extends Service {
 
                 String displayText;
                 if (!recognizedText.isEmpty()) {
-                    // 直接使用OCR识别的原始文字，不查询题库
-                    displayText = "百度OCR识别结果：\n" + recognizedText;
+                    // 使用QuestionBankHelper查询题库
+                    QuestionBankHelper questionBankHelper = QuestionBankHelper.getInstance(this);
+                    String answer = questionBankHelper.queryAnswer(recognizedText);
+                    displayText = answer;
                 } else {
                     // OCR识别失败或没有识别到文字
                     displayText = "无法识别文字，请重新截图";
@@ -471,6 +527,41 @@ public class ScreenCaptureService extends Service {
         } catch (Exception e) {
             Log.e(TAG, "停止媒体投影失败: " + e.getMessage());
         }
+    }
+    
+    /**
+     * 保存默认截图范围到SharedPreferences
+     */
+    private void saveDefaultRect(Rect rect) {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        String rectString = rect.left + "," + rect.top + "," + rect.right + "," + rect.bottom;
+        editor.putString(PREF_DEFAULT_RECT, rectString);
+        editor.apply();
+        Log.i(TAG, "默认截图范围已保存: " + rectString);
+    }
+    
+    /**
+     * 从SharedPreferences加载默认截图范围
+     */
+    private Rect loadDefaultRect() {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        String rectString = prefs.getString(PREF_DEFAULT_RECT, null);
+        if (rectString != null) {
+            String[] parts = rectString.split(",");
+            if (parts.length == 4) {
+                try {
+                    int left = Integer.parseInt(parts[0]);
+                    int top = Integer.parseInt(parts[1]);
+                    int right = Integer.parseInt(parts[2]);
+                    int bottom = Integer.parseInt(parts[3]);
+                    return new Rect(left, top, right, bottom);
+                } catch (NumberFormatException e) {
+                    Log.e(TAG, "解析默认截图范围失败: " + e.getMessage());
+                }
+            }
+        }
+        return null;
     }
 
     private void removeScreenSelectionOverlay() {

@@ -9,7 +9,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
-import android.content.Intent;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
 import android.media.Image;
@@ -29,7 +28,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.view.WindowManager.LayoutParams;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
@@ -63,6 +61,10 @@ public class ScreenCaptureService extends Service {
     private int screenHeight;
     private int screenDensity;
 
+    // 保存媒体投影权限结果
+    private int savedResultCode = 0;
+    private Intent savedResultData = null;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -89,15 +91,30 @@ public class ScreenCaptureService extends Service {
             Intent data = intent.getParcelableExtra(EXTRA_RESULT_INTENT);
 
             if (resultCode != 0 && data != null) {
-                // 已有权限，直接开始截图
+                // 保存权限结果
+                savedResultCode = resultCode;
+                savedResultData = data;
+                // 开始截图
                 startCapture(resultCode, data);
+            } else {
+                // 检查是否已有保存的权限
+                if (savedResultCode != 0 && savedResultData != null) {
+                    // 使用已保存的权限开始截图
+                    startCapture(savedResultCode, savedResultData);
+                } else {
+                    // 请求屏幕录制权限
+                    requestMediaProjectionPermission();
+                }
+            }
+        } else {
+            // 检查是否已有保存的权限
+            if (savedResultCode != 0 && savedResultData != null) {
+                // 使用已保存的权限开始截图
+                startCapture(savedResultCode, savedResultData);
             } else {
                 // 请求屏幕录制权限
                 requestMediaProjectionPermission();
             }
-        } else {
-            // 请求屏幕录制权限
-            requestMediaProjectionPermission();
         }
 
         return START_NOT_STICKY;
@@ -146,6 +163,8 @@ public class ScreenCaptureService extends Service {
                             Bitmap bitmap = imageToBitmap(image);
                             if (bitmap != null) {
                                 showScreenSelectionOverlay(bitmap);
+                            } else {
+                                Log.e(TAG, "图像转换为Bitmap失败");
                             }
                         }
                     } catch (Exception e) {
@@ -154,8 +173,8 @@ public class ScreenCaptureService extends Service {
                         if (image != null) {
                             image.close();
                         }
-                        // 释放资源
-                        releaseMediaProjection();
+                        // 只释放虚拟显示和ImageReader，保留媒体投影
+                        releaseVirtualDisplay();
                     }
                 }
             }, handler);
@@ -171,12 +190,15 @@ public class ScreenCaptureService extends Service {
                                 Bitmap bitmap = imageToBitmap(image);
                                 if (bitmap != null) {
                                     showScreenSelectionOverlay(bitmap);
+                                } else {
+                                    Log.e(TAG, "图像转换为Bitmap失败");
                                 }
                             } catch (Exception e) {
                                 Log.e(TAG, "处理图像失败: " + e.getMessage());
                             } finally {
                                 image.close();
-                                releaseMediaProjection();
+                                // 只释放虚拟显示和ImageReader，保留媒体投影
+                                releaseVirtualDisplay();
                             }
                         }
                     }
@@ -191,32 +213,53 @@ public class ScreenCaptureService extends Service {
     }
 
     private Bitmap imageToBitmap(Image image) {
-        Image.Plane[] planes = image.getPlanes();
-        ByteBuffer buffer = planes[0].getBuffer();
-        int pixelStride = planes[0].getPixelStride();
-        int rowStride = planes[0].getRowStride();
-        int rowPadding = rowStride - pixelStride * image.getWidth();
+        try {
+            Image.Plane[] planes = image.getPlanes();
+            if (planes == null || planes.length == 0) {
+                Log.e(TAG, "图像平面为空");
+                return null;
+            }
 
-        // 创建Bitmap
-        Bitmap bitmap = Bitmap.createBitmap(
-                image.getWidth() + rowPadding / pixelStride,
-                image.getHeight(),
-                Bitmap.Config.ARGB_8888
-        );
-        bitmap.copyPixelsFromBuffer(buffer);
+            Image.Plane plane = planes[0];
+            ByteBuffer buffer = plane.getBuffer();
+            if (buffer == null) {
+                Log.e(TAG, "图像缓冲区为空");
+                return null;
+            }
 
-        // 裁剪到实际屏幕大小
-        bitmap = Bitmap.createBitmap(
-                bitmap,
-                0, 0,
-                image.getWidth(),
-                image.getHeight()
-        );
+            int pixelStride = plane.getPixelStride();
+            int rowStride = plane.getRowStride();
+            int rowPadding = rowStride - pixelStride * image.getWidth();
 
-        return bitmap;
+            // 创建Bitmap
+            Bitmap bitmap = Bitmap.createBitmap(
+                    image.getWidth() + rowPadding / pixelStride,
+                    image.getHeight(),
+                    Bitmap.Config.ARGB_8888
+            );
+            bitmap.copyPixelsFromBuffer(buffer);
+
+            // 裁剪到实际屏幕大小
+            bitmap = Bitmap.createBitmap(
+                    bitmap,
+                    0, 0,
+                    image.getWidth(),
+                    image.getHeight()
+            );
+
+            return bitmap;
+        } catch (Exception e) {
+            Log.e(TAG, "将图像转换为Bitmap失败: " + e.getMessage());
+            return null;
+        }
     }
 
     private void showScreenSelectionOverlay(Bitmap screenBitmap) {
+        if (screenBitmap == null) {
+            Log.e(TAG, "屏幕Bitmap为空");
+            return;
+        }
+
         // 检查是否有悬浮窗权限
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (!Settings.canDrawOverlays(this)) {
@@ -230,43 +273,51 @@ public class ScreenCaptureService extends Service {
             }
         }
 
-        // 创建全屏覆盖层
-        WindowManager.LayoutParams overlayParams = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.MATCH_PARENT,
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ?
-                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY :
-                        WindowManager.LayoutParams.TYPE_PHONE,
-                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
-                        WindowManager.LayoutParams.FLAG_FULLSCREEN |
-                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
-                android.graphics.PixelFormat.TRANSLUCENT
-        );
+        try {
+            // 创建全屏覆盖层
+            WindowManager.LayoutParams overlayParams = new WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ?
+                            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY :
+                            WindowManager.LayoutParams.TYPE_PHONE,
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
+                            WindowManager.LayoutParams.FLAG_FULLSCREEN |
+                            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                    android.graphics.PixelFormat.TRANSLUCENT
+            );
 
-        overlayParams.gravity = Gravity.TOP | Gravity.START;
+            overlayParams.gravity = Gravity.TOP | Gravity.START;
 
-        // 创建覆盖层布局
-        FrameLayout overlayLayout = new FrameLayout(this);
-        overlayLayout.setBackgroundColor(Color.parseColor("#80000000"));
+            // 创建覆盖层布局
+            FrameLayout overlayLayout = new FrameLayout(this);
+            overlayLayout.setBackgroundColor(Color.parseColor("#80000000"));
 
-        // 添加屏幕选择视图
-        ScreenSelectionView selectionView = new ScreenSelectionView(this, screenBitmap, new ScreenSelectionView.OnSelectionCompleteListener() {
-            @Override
-            public void onSelectionComplete(Bitmap selectedBitmap) {
-                // 处理选中的截图区域
-                processSelectedRegion(selectedBitmap);
-                // 移除覆盖层
-                windowManager.removeView(overlayLayout);
-            }
-        });
+            // 添加屏幕选择视图
+            ScreenSelectionView selectionView = new ScreenSelectionView(this, screenBitmap, new ScreenSelectionView.OnSelectionCompleteListener() {
+                @Override
+                public void onSelectionComplete(Bitmap selectedBitmap) {
+                    try {
+                        // 处理选中的截图区域
+                        processSelectedRegion(selectedBitmap);
+                        // 移除覆盖层
+                        windowManager.removeView(overlayLayout);
+                    } catch (Exception e) {
+                        Log.e(TAG, "处理选择区域失败: " + e.getMessage());
+                    }
+                }
+            });
 
-        overlayLayout.addView(selectionView, new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-        ));
+            overlayLayout.addView(selectionView, new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+            ));
 
-        // 添加覆盖层到系统
-        windowManager.addView(overlayLayout, overlayParams);
+            // 添加覆盖层到系统
+            windowManager.addView(overlayLayout, overlayParams);
+        } catch (Exception e) {
+            Log.e(TAG, "显示屏幕选择覆盖层失败: " + e.getMessage());
+        }
     }
 
     private void processSelectedRegion(Bitmap selectedBitmap) {
@@ -305,18 +356,38 @@ public class ScreenCaptureService extends Service {
         });
     }
 
+    private void releaseVirtualDisplay() {
+        try {
+            if (virtualDisplay != null) {
+                virtualDisplay.release();
+                virtualDisplay = null;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "释放虚拟显示失败: " + e.getMessage());
+        }
+        try {
+            if (imageReader != null) {
+                imageReader.close();
+                imageReader = null;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "释放ImageReader失败: " + e.getMessage());
+        }
+    }
+
     private void releaseMediaProjection() {
-        if (virtualDisplay != null) {
-            virtualDisplay.release();
-            virtualDisplay = null;
-        }
-        if (imageReader != null) {
-            imageReader.close();
-            imageReader = null;
-        }
-        if (mediaProjection != null) {
-            mediaProjection.stop();
-            mediaProjection = null;
+        releaseVirtualDisplay();
+
+        try {
+            if (mediaProjection != null) {
+                mediaProjection.stop();
+                mediaProjection = null;
+                // 清除保存的权限
+                savedResultCode = 0;
+                savedResultData = null;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "停止媒体投影失败: " + e.getMessage());
         }
     }
 

@@ -17,11 +17,18 @@ public class MediaProjectionActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_media_projection);
         
         mediaProjectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
         
-        // 启动媒体投影权限请求
-        startActivityForResult(mediaProjectionManager.createScreenCaptureIntent(), REQUEST_CODE_MEDIA_PROJECTION);
+        // 在onResume中启动媒体投影权限请求，确保Activity已经完全初始化
+        Intent screenCaptureIntent = mediaProjectionManager.createScreenCaptureIntent();
+        startActivityForResult(screenCaptureIntent, REQUEST_CODE_MEDIA_PROJECTION);
     }
 
     @Override

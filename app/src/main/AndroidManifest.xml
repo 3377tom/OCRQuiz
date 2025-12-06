@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- 注意：MEDIA_PROJECTION权限不需要在Manifest中声明，而是通过动态请求获取 -->
 
     <application
         android:allowBackup="true"
@@ -29,6 +30,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- 媒体投影权限请求Activity -->
+        <activity
+            android:name=".MediaProjectionActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
         <!-- 浮动窗口服务 -->
         <service

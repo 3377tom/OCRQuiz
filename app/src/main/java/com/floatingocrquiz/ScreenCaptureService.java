@@ -252,6 +252,11 @@ public class ScreenCaptureService extends Service {
                         // 显示屏幕选择覆盖层
                         showScreenSelectionOverlay(bitmap);
                         
+                        // 发送广播通知浮动窗口服务，截图已完成，清除"正在截图"提示
+                        Intent intent = new Intent(FloatingWindowService.ACTION_UPDATE_ANSWER);
+                        intent.putExtra(FloatingWindowService.EXTRA_ANSWER, "");
+                        sendBroadcast(intent);
+                        
                         // 停止虚拟显示（只需要一次截图）
                         releaseVirtualDisplay();
                     }

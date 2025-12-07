@@ -23,6 +23,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
+import android.os.Looper;
 import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -33,6 +34,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -76,6 +78,11 @@ public class ScreenCaptureService extends Service {
 
     // 覆盖层相关
     private View screenSelectionOverlay;
+    
+    // 自定义提示消息相关
+    private View customToastView;
+    private WindowManager customToastWindowManager;
+    private static final long CUSTOM_TOAST_DURATION = 2000; // 2秒
     private ScreenSelectionView selectionView;
 
     private int screenWidth;
@@ -215,11 +222,11 @@ public class ScreenCaptureService extends Service {
         imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
             @Override
             public void onImageAvailable(ImageReader reader) {
+                Image image = null;
                 try {
-                    Image image = reader.acquireLatestImage();
+                    image = reader.acquireLatestImage();
                     if (image != null) {
                         Bitmap bitmap = imageToBitmap(image);
-                        image.close();
                         
                         // 检查是否有默认截图范围且不处于设置模式
                         Rect defaultRect = loadDefaultRect();
@@ -249,8 +256,12 @@ public class ScreenCaptureService extends Service {
                         releaseVirtualDisplay();
                     }
                 } catch (Exception e) {
-                    Log.e(TAG, "获取截图失败: " + e.getMessage());
+                    Log.e(TAG, "获取或处理截图失败: " + e.getMessage());
                     stopSelf();
+                } finally {
+                    if (image != null) {
+                        image.close();
+                    }
                 }
             }
         }, handler);
@@ -376,7 +387,7 @@ public class ScreenCaptureService extends Service {
                 intent.setData(android.net.Uri.parse("package:" + getPackageName()));
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
-                Toast.makeText(this, "请开启悬浮窗权限以使用截图功能", Toast.LENGTH_SHORT).show();
+                showCustomToast("请开启悬浮窗权限以使用截图功能");
                 return;
             }
         }
@@ -432,12 +443,17 @@ public class ScreenCaptureService extends Service {
                             processSelectedRegion(selectedBitmap);
                         }
                     } catch (Exception e) {
-                        Log.e(TAG, "处理选择区域失败: " + e.getMessage());
-                        Toast.makeText(ScreenCaptureService.this, "截图处理失败，请重试", Toast.LENGTH_SHORT).show();
-                    } finally {
+                Log.e(TAG, "处理选择区域失败: " + e.getMessage());
+                showCustomToast("截图处理失败，请重试");
+            } finally {
                         // 移除覆盖层
                         removeScreenSelectionOverlay();
                     }
+                }
+
+                @Override
+                public void onSelectionError(String errorMessage) {
+                    showCustomToast(errorMessage);
                 }
             });
 
@@ -451,7 +467,7 @@ public class ScreenCaptureService extends Service {
             screenSelectionOverlay = overlayLayout;
         } catch (Exception e) {
             Log.e(TAG, "显示屏幕选择覆盖层失败: " + e.getMessage());
-            Toast.makeText(this, "截图功能启动失败，请重试", Toast.LENGTH_SHORT).show();
+            showCustomToast("截图功能启动失败，请重试");
             // 确保资源被释放
             if (screenBitmap != null && !screenBitmap.isRecycled()) {
                 screenBitmap.recycle();
@@ -512,6 +528,78 @@ public class ScreenCaptureService extends Service {
             }
         } catch (Exception e) {
             Log.e(TAG, "释放ImageReader失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 显示自定义提示消息
+     * @param message 提示文本
+     */
+    private void showCustomToast(String message) {
+        // 如果在后台或没有悬浮窗权限，不显示提示
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            return;
+        }
+        
+        new Handler(Looper.getMainLooper()).post(() -> {
+            try {
+                // 移除旧的提示
+                hideCustomToast();
+                
+                // 初始化WindowManager
+                if (customToastWindowManager == null) {
+                    customToastWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+                }
+                
+                // 创建提示视图
+                if (customToastView == null) {
+                    LayoutInflater inflater = LayoutInflater.from(this);
+                    customToastView = inflater.inflate(R.layout.custom_toast, null);
+                }
+                
+                // 设置提示文本
+                TextView textView = customToastView.findViewById(R.id.toast_text);
+                textView.setText(message);
+                
+                // 创建WindowManager参数
+                WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                        WindowManager.LayoutParams.WRAP_CONTENT,
+                        WindowManager.LayoutParams.WRAP_CONTENT,
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ?
+                                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY :
+                                WindowManager.LayoutParams.TYPE_PHONE,
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE |
+                                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                        android.graphics.PixelFormat.TRANSLUCENT
+                );
+                
+                // 设置位置为屏幕底部中央
+                params.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+                params.y = 100; // 距离底部的距离
+                
+                // 添加视图到WindowManager
+                customToastWindowManager.addView(customToastView, params);
+                
+                // 定时移除提示
+                new Handler().postDelayed(this::hideCustomToast, CUSTOM_TOAST_DURATION);
+            } catch (Exception e) {
+                Log.e(TAG, "显示自定义提示失败: " + e.getMessage());
+            }
+        });
+    }
+    
+    /**
+     * 隐藏自定义提示消息
+     */
+    private void hideCustomToast() {
+        if (customToastView != null && customToastWindowManager != null) {
+            try {
+                customToastWindowManager.removeView(customToastView);
+            } catch (Exception e) {
+                Log.e(TAG, "隐藏自定义提示失败: " + e.getMessage());
+            }
+            customToastView = null;
         }
     }
 

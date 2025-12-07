@@ -10,8 +10,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
+import android.view.LayoutInflater;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -20,6 +23,8 @@ public class MainActivity extends AppCompatActivity {
 
     private Button startButton;
     private Button stopButton;
+    private View customToastView;
+    private ViewGroup customToastWindowManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,4 +94,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+    
+    // 由于MainActivity是Activity，Toast通常不会被拦截，所以暂时保留使用Toast
+    // 如果需要，后续可以实现与ScreenCaptureService类似的自定义提示消息功能
 }

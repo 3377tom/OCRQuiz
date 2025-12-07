@@ -31,6 +31,7 @@ public class ScreenSelectionView extends View {
 
     public interface OnSelectionCompleteListener {
         void onSelectionComplete(Bitmap selectedBitmap);
+        void onSelectionError(String errorMessage);
     }
 
     public ScreenSelectionView(Context context, Bitmap bitmap, OnSelectionCompleteListener listener) {
@@ -65,13 +66,23 @@ public class ScreenSelectionView extends View {
         paint.setColor(Color.GREEN);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(3f);
-        paint.setAlpha(200);
+        paint.setAlpha(255);
+        
+        // 选择区域填充画笔
+        Paint fillPaint = new Paint();
+        fillPaint.setColor(Color.GREEN);
+        fillPaint.setStyle(Paint.Style.FILL);
+        fillPaint.setAlpha(50);
         
         // 文字画笔
         textPaint = new Paint();
         textPaint.setColor(Color.WHITE);
         textPaint.setTextSize(24f);
         textPaint.setStrokeWidth(2f);
+        textPaint.setShadowColor(Color.BLACK);
+        textPaint.setShadowDx(2f);
+        textPaint.setShadowDy(2f);
+        textPaint.setShadowRadius(3f);
     }
 
     @Override
@@ -91,11 +102,34 @@ public class ScreenSelectionView extends View {
             int bottom = Math.max(startPoint.y, endPoint.y);
             
             Rect rect = new Rect(left, top, right, bottom);
+            
+            // 创建填充画笔
+            Paint fillPaint = new Paint();
+            fillPaint.setColor(Color.GREEN);
+            fillPaint.setStyle(Paint.Style.FILL);
+            fillPaint.setAlpha(50);
+            
+            // 绘制半透明填充
+            canvas.drawRect(rect, fillPaint);
+            
+            // 绘制边框
             canvas.drawRect(rect, paint);
             
             // 绘制选择区域大小
             String sizeText = String.format("%dx%d", right - left, bottom - top);
             canvas.drawText(sizeText, left + 10, top - 10, textPaint);
+            
+            // 绘制辅助线（十字线）
+            Paint crossPaint = new Paint();
+            crossPaint.setColor(Color.GREEN);
+            crossPaint.setStyle(Paint.Style.STROKE);
+            crossPaint.setStrokeWidth(1f);
+            crossPaint.setAlpha(150);
+            
+            // 绘制水平辅助线
+            canvas.drawLine(left, (top + bottom) / 2, right, (top + bottom) / 2, crossPaint);
+            // 绘制垂直辅助线
+            canvas.drawLine((left + right) / 2, top, (left + right) / 2, bottom, crossPaint);
         }
     }
 
@@ -159,15 +193,21 @@ public class ScreenSelectionView extends View {
                                 }
                             } else {
                                 // 选择区域太小
-                                Toast.makeText(getContext(), "选择区域太小，请重新选择", Toast.LENGTH_SHORT).show();
+                                if (onSelectionCompleteListener != null) {
+                                    onSelectionCompleteListener.onSelectionError("选择区域太小，请重新选择");
+                                }
                             }
                         } catch (Exception e) {
                             // 处理异常
-                            Toast.makeText(getContext(), "截图处理失败，请重试", Toast.LENGTH_SHORT).show();
+                            if (onSelectionCompleteListener != null) {
+                                onSelectionCompleteListener.onSelectionError("截图处理失败，请重试");
+                            }
                         }
                     } else {
                         // 选择区域太小
-                        Toast.makeText(getContext(), "选择区域太小，请重新选择", Toast.LENGTH_SHORT).show();
+                        if (onSelectionCompleteListener != null) {
+                            onSelectionCompleteListener.onSelectionError("选择区域太小，请重新选择");
+                        }
                     }
                 }
                 return true;

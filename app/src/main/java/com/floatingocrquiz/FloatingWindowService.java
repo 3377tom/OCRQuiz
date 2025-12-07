@@ -20,7 +20,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,8 +42,8 @@ public class FloatingWindowService extends Service {
     private WindowManager.LayoutParams layoutParams;
     private View floatingView;
     private TextView answerTextView;
-    private Button captureButton;
-    private Button settingsButton;
+    private ImageButton captureButton;
+    private ImageButton settingsButton;
     
     // 默认截图范围设置
     private static final String PREFS_NAME = "ScreenshotPrefs";

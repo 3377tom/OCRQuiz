@@ -135,8 +135,21 @@ public class QuestionBankHelper {
         // 去除多余的空格
         text = text.replaceAll("\\s+", " ").trim();
         
-        // 去除常见的OCR错误字符
-        text = text.replaceAll("[`~!@#$%^&*()_+\\-=\\[\\]{}|;:\\'\\\"\\\\\\\\,\\.<\\>?/]", "");
+        // 统一括号格式（转换为中文括号）
+        text = text.replaceAll("\\(", "（")
+                   .replaceAll("\\)", "）")
+                   .replaceAll("\\[", "【")
+                   .replaceAll("\\]", "】");
+        
+        // 统一标点符号格式
+        text = text.replaceAll(";", "；")
+                   .replaceAll("\\.", "。")
+                   .replaceAll(",", "，")
+                   .replaceAll("!", "！")
+                   .replaceAll("\\?", "？");
+        
+        // 去除多余的标点符号
+        text = text.replaceAll("[。，；？！]+", "。");
         
         // 转换为小写进行匹配
         return text.toLowerCase();
@@ -144,25 +157,45 @@ public class QuestionBankHelper {
 
     /**
      * 提取关键词
+     * 针对不同题型调整停用词策略，特别是判断题保留关键语义词
      */
     private List<String> extractKeywords(String text) {
         List<String> keywords = new ArrayList<>();
         
-        // 简单的关键词提取，去除常见的停用词
+        // 简单的关键词提取
         String[] words = text.split(" ");
-        String[] stopWords = {"的", "了", "是", "在", "和", "与", "等", "以下", "哪些", "哪个", "不是", "包括"};
+        
+        // 基础停用词列表（不包含会影响语义的词）
+        String[] baseStopWords = {
+            "的", "了", "在", "和", "与", "等", "以下", "哪些", "哪个", 
+            "包括", "依据", "根据", "按照", "关于", "对", "的话"
+        };
+        
+        // 可能影响语义的词列表（在特定题型中需要保留）
+        String[] semanticWords = {
+            "不是", "必须", "应当", "应该", "能够", "需要", "可以"
+        };
         
         for (String word : words) {
             boolean isStopWord = false;
-            for (String stopWord : stopWords) {
+            
+            // 检查是否为基础停用词
+            for (String stopWord : baseStopWords) {
                 if (word.equals(stopWord)) {
                     isStopWord = true;
                     break;
                 }
             }
+            
+            // 不将语义关键的词作为停用词
             if (!isStopWord && word.length() > 1) {
                 keywords.add(word);
             }
+        }
+        
+        // 如果没有提取到关键词，返回文本本身作为关键词
+        if (keywords.isEmpty()) {
+            keywords.add(text);
         }
         
         return keywords;
@@ -187,8 +220,8 @@ public class QuestionBankHelper {
             }
         }
         
-        // 设置匹配阈值
-        if (highestScore > 0.3) {
+        // 设置匹配阈值（降低阈值以提高匹配率）
+        if (highestScore > 0.2) {
             return bestMatch;
         }
         
@@ -199,34 +232,109 @@ public class QuestionBankHelper {
      * 计算问题相似度
      */
     private double calculateSimilarity(String text1, String text2, List<String> keywords) {
-        // 使用Jaccard相似度
+        // 文本预处理
+        String processedText1 = preprocessForSimilarity(text1);
+        String processedText2 = preprocessForSimilarity(text2);
+        
+        if (processedText1.isEmpty() || processedText2.isEmpty()) {
+            return 0;
+        }
+        
+        // Jaccard相似度
+        double jaccardScore = calculateJaccardSimilarity(processedText1, processedText2);
+        
+        // 关键词匹配得分
+        double keywordScore = calculateKeywordScore(processedText1, processedText2, keywords);
+        
+        // 最长公共子串长度得分
+        double lcsScore = calculateLCSScore(processedText1, processedText2);
+        
+        // 综合相似度得分（加权平均）
+        double totalScore = jaccardScore * 0.4 + keywordScore * 0.3 + lcsScore * 0.3;
+        
+        return totalScore;
+    }
+    
+    /**
+     * 相似度计算前的预处理
+     */
+    private String preprocessForSimilarity(String text) {
+        // 移除常见前缀和后缀
+        text = text.replaceAll("^[Qq]:\\s*[A-Z]+\\s*", "");
+        text = text.replaceAll("\\s*[Aa]:\\s*[A-Z]+\\s*$", "");
+        
+        // 移除引导语
+        text = text.replaceAll("^依据.*，", "");
+        text = text.replaceAll("^根据.*，", "");
+        
+        return text;
+    }
+    
+    /**
+     * 计算Jaccard相似度
+     */
+    private double calculateJaccardSimilarity(String text1, String text2) {
         List<String> words1 = new ArrayList<>(List.of(text1.split(" ")));
         List<String> words2 = new ArrayList<>(List.of(text2.split(" ")));
         
-        // 创建交集
         List<String> intersection = new ArrayList<>(words1);
         intersection.retainAll(words2);
         
-        // 创建并集
         List<String> union = new ArrayList<>(words1);
         union.addAll(words2);
         
-        // 计算Jaccard系数
-        double jaccardScore = union.isEmpty() ? 0 : (double) intersection.size() / union.size();
+        if (union.isEmpty()) {
+            return 0;
+        }
         
-        // 关键词匹配加分
-        int keywordMatches = 0;
+        return (double) intersection.size() / union.size();
+    }
+    
+    /**
+     * 计算关键词匹配得分
+     */
+    private double calculateKeywordScore(String text1, String text2, List<String> keywords) {
+        if (keywords.isEmpty()) {
+            return 0;
+        }
+        
+        int matchedKeywords = 0;
         for (String keyword : keywords) {
             if (text2.contains(keyword)) {
-                keywordMatches++;
+                matchedKeywords++;
             }
         }
         
-        // 关键词匹配分数
-        double keywordScore = keywords.isEmpty() ? 0 : (double) keywordMatches / keywords.size();
+        return (double) matchedKeywords / keywords.size();
+    }
+    
+    /**
+     * 计算最长公共子串长度得分
+     */
+    private double calculateLCSScore(String text1, String text2) {
+        int m = text1.length();
+        int n = text2.length();
         
-        // 综合分数
-        return jaccardScore * 0.7 + keywordScore * 0.3;
+        int[][] dp = new int[m + 1][n + 1];
+        int maxLength = 0;
+        
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                if (text1.charAt(i - 1) == text2.charAt(j - 1)) {
+                    dp[i][j] = dp[i - 1][j - 1] + 1;
+                    maxLength = Math.max(maxLength, dp[i][j]);
+                } else {
+                    dp[i][j] = 0;
+                }
+            }
+        }
+        
+        if (m == 0 || n == 0) {
+            return 0;
+        }
+        
+        // 归一化得分
+        return (double) maxLength / Math.max(m, n);
     }
 
     /**

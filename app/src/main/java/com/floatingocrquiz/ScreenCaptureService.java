@@ -298,31 +298,16 @@ public class ScreenCaptureService extends Service {
                     handler
             );
 
-            // 延迟一下确保截图完成
+            // 添加超时处理，防止截图流程无限等待
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    if (imageReader != null) {
-                        Image image = imageReader.acquireLatestImage();
-                        if (image != null) {
-                            try {
-                                Bitmap bitmap = imageToBitmap(image);
-                                if (bitmap != null) {
-                                    showScreenSelectionOverlay(bitmap);
-                                } else {
-                                    Log.e(TAG, "图像转换为Bitmap失败");
-                                }
-                            } catch (Exception e) {
-                                Log.e(TAG, "处理图像失败: " + e.getMessage());
-                            } finally {
-                                image.close();
-                                // 只释放虚拟显示和ImageReader，保留媒体投影
-                                releaseVirtualDisplay();
-                            }
-                        }
+                    if (virtualDisplay != null && imageReader != null) {
+                        Log.e(TAG, "截图超时，释放资源");
+                        releaseVirtualDisplay();
                     }
                 }
-            }, 100);
+            }, 3000); // 3秒超时
 
         } catch (Exception e) {
             Log.e(TAG, "初始化屏幕捕获失败: " + e.getMessage());

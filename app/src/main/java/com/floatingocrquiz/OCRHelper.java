@@ -108,36 +108,55 @@ public class OCRHelper {
             // 移除同步调用，使用异步方法
             final String[] resultText = {""};
             final CountDownLatch latch = new CountDownLatch(1);
+            final String finalTempFilePath = tempFilePath;
             
             // 异步调用识别接口
             OCR.getInstance(context).recognizeGeneralBasic(params, new OnResultListener<GeneralResult>() {
                 @Override
                 public void onResult(GeneralResult result) {
-                    if (result != null) {
-                        Log.d(TAG, "OCR识别成功，结果不为null");
-                        
-                        if (result.getWordList() != null) {
-                            Log.d(TAG, "识别到的单词数量: " + result.getWordList().size());
-                            resultText[0] = formatResult(result);
-                            Log.d(TAG, "格式化后的识别结果: " + resultText[0]);
+                    try {
+                        if (result != null) {
+                            Log.d(TAG, "OCR识别成功，结果不为null");
+                            
+                            if (result.getWordList() != null) {
+                                Log.d(TAG, "识别到的单词数量: " + result.getWordList().size());
+                                resultText[0] = formatResult(result);
+                                Log.d(TAG, "格式化后的识别结果: " + resultText[0]);
+                            } else {
+                                Log.e(TAG, "OCR识别结果的WordList为空");
+                                resultText[0] = "[ERROR] 识别结果为空";
+                            }
                         } else {
-                            Log.e(TAG, "OCR识别结果的WordList为空");
+                            Log.e(TAG, "OCR识别结果为空");
                             resultText[0] = "[ERROR] 识别结果为空";
                         }
-                    } else {
-                        Log.e(TAG, "OCR识别结果为空");
-                        resultText[0] = "[ERROR] 识别结果为空";
+                    } finally {
+                        // 识别完成后删除临时文件
+                        if (finalTempFilePath != null) {
+                            Log.d(TAG, "准备删除临时文件: " + finalTempFilePath);
+                            BitmapUtils.deleteTempFile(finalTempFilePath);
+                            Log.d(TAG, "临时文件删除成功");
+                        }
+                        latch.countDown();
                     }
-                    latch.countDown();
                 }
                 
                 @Override
                 public void onError(OCRError error) {
-                    Log.e(TAG, "OCR识别失败: " + error.getMessage());
-                    Log.e(TAG, "错误码: " + error.getErrorCode());
-                    Log.e(TAG, "错误详细信息: " + error.toString());
-                    resultText[0] = "[ERROR] 识别失败: " + error.getMessage();
-                    latch.countDown();
+                    try {
+                        Log.e(TAG, "OCR识别失败: " + error.getMessage());
+                        Log.e(TAG, "错误码: " + error.getErrorCode());
+                        Log.e(TAG, "错误详细信息: " + error.toString());
+                        resultText[0] = "[ERROR] 识别失败: " + error.getMessage();
+                    } finally {
+                        // 识别完成后删除临时文件
+                        if (finalTempFilePath != null) {
+                            Log.d(TAG, "准备删除临时文件: " + finalTempFilePath);
+                            BitmapUtils.deleteTempFile(finalTempFilePath);
+                            Log.d(TAG, "临时文件删除成功");
+                        }
+                        latch.countDown();
+                    }
                 }
             });
             
@@ -145,6 +164,10 @@ public class OCRHelper {
             boolean waitResult = latch.await(10, TimeUnit.SECONDS);
             if (!waitResult) {
                 Log.e(TAG, "OCR识别超时");
+                // 超时也要删除临时文件
+                if (tempFilePath != null) {
+                    BitmapUtils.deleteTempFile(tempFilePath);
+                }
                 return "[ERROR] 识别超时";
             }
             
@@ -154,14 +177,11 @@ public class OCRHelper {
         } catch (Exception e) {
             Log.e(TAG, "OCR识别失败: " + e.getMessage());
             Log.e(TAG, "异常堆栈: " + android.util.Log.getStackTraceString(e));
-            return "[ERROR] 识别失败: " + e.getMessage();
-        } finally {
-            // 识别完成后删除临时文件
+            // 发生异常也要删除临时文件
             if (tempFilePath != null) {
-                Log.d(TAG, "准备删除临时文件: " + tempFilePath);
                 BitmapUtils.deleteTempFile(tempFilePath);
-                Log.d(TAG, "临时文件删除成功");
             }
+            return "[ERROR] 识别失败: " + e.getMessage();
         }
     }
     
@@ -190,22 +210,41 @@ public class OCRHelper {
                 return;
             }
             
+            final String finalTempFilePath = tempFilePath;
             // 异步调用识别接口
             OCR.getInstance(context).recognizeGeneralBasic(params, new OnResultListener<GeneralResult>() {
                 @Override
                 public void onResult(GeneralResult result) {
-                    if (result != null && result.getWordList() != null) {
-                        callback.onOcrComplete(formatResult(result));
-                    } else {
-                        callback.onOcrComplete("");
+                    try {
+                        if (result != null && result.getWordList() != null) {
+                            callback.onOcrComplete(formatResult(result));
+                        } else {
+                            callback.onOcrComplete("");
+                        }
+                    } finally {
+                        // 识别完成后删除临时文件
+                        if (finalTempFilePath != null) {
+                            Log.d(TAG, "准备删除临时文件: " + finalTempFilePath);
+                            BitmapUtils.deleteTempFile(finalTempFilePath);
+                            Log.d(TAG, "临时文件删除成功");
+                        }
                     }
                 }
                 
                 @Override
                 public void onError(OCRError error) {
-                    Log.e(TAG, "OCR识别失败: " + error.getMessage());
-                    Log.e(TAG, "错误码: " + error.getErrorCode());
-                    callback.onOcrComplete("");
+                    try {
+                        Log.e(TAG, "OCR识别失败: " + error.getMessage());
+                        Log.e(TAG, "错误码: " + error.getErrorCode());
+                        callback.onOcrComplete("");
+                    } finally {
+                        // 识别完成后删除临时文件
+                        if (finalTempFilePath != null) {
+                            Log.d(TAG, "准备删除临时文件: " + finalTempFilePath);
+                            BitmapUtils.deleteTempFile(finalTempFilePath);
+                            Log.d(TAG, "临时文件删除成功");
+                        }
+                    }
                 }
             });
         } catch (Exception e) {

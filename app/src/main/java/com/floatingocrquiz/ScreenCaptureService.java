@@ -468,6 +468,8 @@ public class ScreenCaptureService extends Service {
     private void processSelectedRegion(Bitmap selectedBitmap) {
         executorService.execute(() -> {
             try {
+                Log.d(TAG, "开始处理选中区域，Bitmap尺寸: " + selectedBitmap.getWidth() + "x" + selectedBitmap.getHeight());
+                
                 // 调用OCR进行文字识别（使用单例模式）
                 OCRHelper ocrHelper = OCRHelper.getInstance(this);
                 String recognizedText = ocrHelper.recognizeText(selectedBitmap);
@@ -479,21 +481,27 @@ public class ScreenCaptureService extends Service {
                     
                     // 使用QuestionBankHelper查询题库
                     QuestionBankHelper questionBankHelper = QuestionBankHelper.getInstance(this);
+                    Log.d(TAG, "开始查询题库");
                     String answer = questionBankHelper.queryAnswer(recognizedText);
+                    Log.d(TAG, "题库查询结果: " + answer);
                     
                     // 组合显示识别结果和答案（调试用）
                     displayText = "识别到的文字:\n" + recognizedText + "\n\n" + answer;
                 } else {
                     // OCR识别失败或没有识别到文字
+                    Log.e(TAG, "OCR识别失败或没有识别到文字");
                     displayText = "无法识别文字，请重新截图";
                 }
 
                 // 更新浮动窗口显示识别结果
+                Log.d(TAG, "准备更新浮动窗口，显示内容: " + displayText);
                 Intent intent = new Intent(FloatingWindowService.ACTION_UPDATE_ANSWER);
                 intent.putExtra(FloatingWindowService.EXTRA_ANSWER, displayText);
                 sendBroadcast(intent);
+                Log.d(TAG, "浮动窗口更新广播已发送");
             } catch (Exception e) {
                 Log.e(TAG, "处理选中区域失败: " + e.getMessage());
+                Log.e(TAG, "异常堆栈: " + android.util.Log.getStackTraceString(e));
                 // 发送错误信息
                 Intent intent = new Intent(FloatingWindowService.ACTION_UPDATE_ANSWER);
                 intent.putExtra(FloatingWindowService.EXTRA_ANSWER, "处理图片失败，请重新截图");
@@ -502,6 +510,7 @@ public class ScreenCaptureService extends Service {
                 // 释放Bitmap资源
                 if (selectedBitmap != null && !selectedBitmap.isRecycled()) {
                     selectedBitmap.recycle();
+                    Log.d(TAG, "Bitmap资源已释放");
                 }
             }
         });

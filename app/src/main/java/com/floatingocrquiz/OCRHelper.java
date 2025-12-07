@@ -80,9 +80,11 @@ public class OCRHelper {
     public String recognizeText(Bitmap bitmap) {
         String tempFilePath = null;
         try {
+            Log.d(TAG, "开始OCR识别，Bitmap尺寸: " + bitmap.getWidth() + "x" + bitmap.getHeight());
+            
             if (!isInitialized) {
                 Log.e(TAG, "OCR SDK尚未初始化完成");
-                return "";
+                return "[ERROR] OCR SDK尚未初始化完成";
             }
             
             // 构建通用文字识别参数
@@ -94,12 +96,13 @@ public class OCRHelper {
             // 先将Bitmap保存为临时文件
             tempFilePath = BitmapUtils.saveBitmapToTempFile(bitmap, context);
             if (tempFilePath != null) {
+                Log.d(TAG, "临时文件保存成功: " + tempFilePath);
                 // 将String转换为File对象
                 File imageFile = new File(tempFilePath);
                 params.setImageFile(imageFile);
             } else {
                 Log.e(TAG, "无法保存临时文件");
-                return "";
+                return "[ERROR] 无法保存临时文件";
             }
             
             // 移除同步调用，使用异步方法
@@ -110,11 +113,20 @@ public class OCRHelper {
             OCR.getInstance(context).recognizeGeneralBasic(params, new OnResultListener<GeneralResult>() {
                 @Override
                 public void onResult(GeneralResult result) {
-                    if (result != null && result.getWordList() != null) {
-                        resultText[0] = formatResult(result);
+                    if (result != null) {
+                        Log.d(TAG, "OCR识别成功，结果不为null");
+                        
+                        if (result.getWordList() != null) {
+                            Log.d(TAG, "识别到的单词数量: " + result.getWordList().size());
+                            resultText[0] = formatResult(result);
+                            Log.d(TAG, "格式化后的识别结果: " + resultText[0]);
+                        } else {
+                            Log.e(TAG, "OCR识别结果的WordList为空");
+                            resultText[0] = "[ERROR] 识别结果为空";
+                        }
                     } else {
                         Log.e(TAG, "OCR识别结果为空");
-                        resultText[0] = "";
+                        resultText[0] = "[ERROR] 识别结果为空";
                     }
                     latch.countDown();
                 }
@@ -123,22 +135,32 @@ public class OCRHelper {
                 public void onError(OCRError error) {
                     Log.e(TAG, "OCR识别失败: " + error.getMessage());
                     Log.e(TAG, "错误码: " + error.getErrorCode());
-                    resultText[0] = "";
+                    Log.e(TAG, "错误详细信息: " + error.toString());
+                    resultText[0] = "[ERROR] 识别失败: " + error.getMessage();
                     latch.countDown();
                 }
             });
             
             // 等待异步调用完成
-            latch.await(10, TimeUnit.SECONDS);
+            boolean waitResult = latch.await(10, TimeUnit.SECONDS);
+            if (!waitResult) {
+                Log.e(TAG, "OCR识别超时");
+                return "[ERROR] 识别超时";
+            }
             
+            Log.d(TAG, "OCR识别完成，返回结果长度: " + resultText[0].length());
+            Log.d(TAG, "返回的识别结果: " + resultText[0]);
             return resultText[0];
         } catch (Exception e) {
             Log.e(TAG, "OCR识别失败: " + e.getMessage());
-            return "";
+            Log.e(TAG, "异常堆栈: " + android.util.Log.getStackTraceString(e));
+            return "[ERROR] 识别失败: " + e.getMessage();
         } finally {
             // 识别完成后删除临时文件
             if (tempFilePath != null) {
+                Log.d(TAG, "准备删除临时文件: " + tempFilePath);
                 BitmapUtils.deleteTempFile(tempFilePath);
+                Log.d(TAG, "临时文件删除成功");
             }
         }
     }
@@ -162,6 +184,10 @@ public class OCRHelper {
                 // 将String转换为File对象
                 File imageFile = new File(tempFilePath);
                 params.setImageFile(imageFile);
+            } else {
+                Log.e(TAG, "无法保存临时文件");
+                callback.onOcrComplete("[ERROR] 无法保存临时文件");
+                return;
             }
             
             // 异步调用识别接口

@@ -136,7 +136,7 @@ public class QuestionBankHelper {
         text = text.replaceAll("\\s+", " ").trim();
         
         // 去除常见的OCR错误字符
-        text = text.replaceAll("[`~!@#$%^&*()_+\\-=\\[\\]{}|;:\\'\\"\\\\,\\.<\\>?/]", "");
+        text = text.replaceAll("[`~!@#$%^&*()_+\\-=\\[\\]{}|;:\\'\\\"\\\\\\\\,\\.<\\>?/]", "");
         
         // 转换为小写进行匹配
         return text.toLowerCase();

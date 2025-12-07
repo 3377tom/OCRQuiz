@@ -36,18 +36,24 @@
 
         <ImageButton
             android:id="@+id/capture_button"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_marginRight="10dp"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginRight="15dp"
             android:background="@null"
-            android:src="@drawable/screenshot" />
+            android:src="@drawable/screenshot"
+            android:scaleType="centerInside"
+            android:adjustViewBounds="true"
+            android:padding="10dp" />
 
         <ImageButton
             android:id="@+id/settings_button"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
             android:background="@null"
-            android:src="@drawable/shape" />
+            android:src="@drawable/shape"
+            android:scaleType="centerInside"
+            android:adjustViewBounds="true"
+            android:padding="10dp" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

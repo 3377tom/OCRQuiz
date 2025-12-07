@@ -474,10 +474,15 @@ public class ScreenCaptureService extends Service {
 
                 String displayText;
                 if (!recognizedText.isEmpty()) {
+                    // 显示识别到的文字（调试用）
+                    Log.d(TAG, "OCR识别到的文字: " + recognizedText);
+                    
                     // 使用QuestionBankHelper查询题库
                     QuestionBankHelper questionBankHelper = QuestionBankHelper.getInstance(this);
                     String answer = questionBankHelper.queryAnswer(recognizedText);
-                    displayText = answer;
+                    
+                    // 组合显示识别结果和答案（调试用）
+                    displayText = "识别到的文字:\n" + recognizedText + "\n\n" + answer;
                 } else {
                     // OCR识别失败或没有识别到文字
                     displayText = "无法识别文字，请重新截图";

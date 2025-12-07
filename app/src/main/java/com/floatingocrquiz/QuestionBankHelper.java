@@ -124,11 +124,19 @@ public class QuestionBankHelper {
      * 清理OCR识别的文本，去除噪声
      */
     private String cleanOCRText(String text) {
-        // 去除多余的空格和换行
+        if (text == null) {
+            return "";
+        }
+        
+        // 处理换行符：将连续的换行符替换为单个空格
+        // 这样既保留了文本的基本结构，又避免了换行符导致的匹配问题
+        text = text.replaceAll("\\n+", " ");
+        
+        // 去除多余的空格
         text = text.replaceAll("\\s+", " ").trim();
         
         // 去除常见的OCR错误字符
-        text = text.replaceAll("[`~!@#$%^&*()_+\\-=\\[\\]{}|;:\\'\\\"\\\\\\\\,\\.<\\>?/]", "");
+        text = text.replaceAll("[`~!@#$%^&*()_+\\-=\\[\\]{}|;:\\'\\"\\\\\\\\,\\.<\\>?/]", "");
         
         // 转换为小写进行匹配
         return text.toLowerCase();

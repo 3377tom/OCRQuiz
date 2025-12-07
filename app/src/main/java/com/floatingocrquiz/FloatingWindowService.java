@@ -8,6 +8,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
+import android.provider.Settings;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.os.Build;
@@ -109,6 +111,17 @@ public class FloatingWindowService extends Service {
     }
 
     private void showFloatingWindow() {
+        // 检查悬浮窗权限
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            Toast.makeText(this, "请先授予悬浮窗权限", Toast.LENGTH_SHORT).show();
+            // 打开权限设置页面
+            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:" + getPackageName()));
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            return;
+        }
+        
         windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
 
         // 创建浮动窗口布局参数
@@ -138,6 +151,8 @@ public class FloatingWindowService extends Service {
         // 设置截图按钮点击事件
         captureButton.setOnClickListener(v -> {
             answerTextView.setText(R.string.capturing);
+            // 重置为截图识别模式
+            isSettingDefaultRange = false;
             // 启动屏幕捕获功能
             startScreenCapture();
         });
@@ -145,6 +160,7 @@ public class FloatingWindowService extends Service {
         // 设置截图范围按钮点击事件
         settingsButton.setOnClickListener(v -> {
             answerTextView.setText("请选择默认截图范围");
+            // 设置为截图范围设置模式
             isSettingDefaultRange = true;
             // 启动屏幕捕获功能用于设置默认范围
             startScreenCapture();
@@ -200,7 +216,12 @@ public class FloatingWindowService extends Service {
 
     public void updateAnswer(String answer) {
         if (answerTextView != null) {
-            answerTextView.setText(getString(R.string.answer_prefix) + answer);
+            if (answer == null || answer.isEmpty()) {
+                // 清除"正在截图"提示
+                answerTextView.setText("");
+            } else {
+                answerTextView.setText(getString(R.string.answer_prefix) + answer);
+            }
         }
     }
 

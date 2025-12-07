@@ -479,14 +479,21 @@ public class ScreenCaptureService extends Service {
                     // 显示识别到的文字（调试用）
                     Log.d(TAG, "OCR识别到的文字: " + recognizedText);
                     
-                    // 使用QuestionBankHelper查询题库
-                    QuestionBankHelper questionBankHelper = QuestionBankHelper.getInstance(this);
-                    Log.d(TAG, "开始查询题库");
-                    String answer = questionBankHelper.queryAnswer(recognizedText);
-                    Log.d(TAG, "题库查询结果: " + answer);
-                    
-                    // 组合显示识别结果和答案（调试用）
-                    displayText = "识别到的文字:\n" + recognizedText + "\n\n" + answer;
+                    // 检查识别结果是否包含错误信息
+                    if (recognizedText.startsWith("[ERROR]")) {
+                        // OCR识别失败
+                        Log.e(TAG, "OCR识别失败: " + recognizedText);
+                        displayText = "处理图片失败，请重新截图";
+                    } else {
+                        // 使用QuestionBankHelper查询题库
+                        QuestionBankHelper questionBankHelper = QuestionBankHelper.getInstance(this);
+                        Log.d(TAG, "开始查询题库");
+                        String answer = questionBankHelper.queryAnswer(recognizedText);
+                        Log.d(TAG, "题库查询结果: " + answer);
+                        
+                        // 组合显示识别结果和答案（调试用）
+                        displayText = "识别到的文字:\n" + recognizedText + "\n\n" + answer;
+                    }
                 } else {
                     // OCR识别失败或没有识别到文字
                     Log.e(TAG, "OCR识别失败或没有识别到文字");

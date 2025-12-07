@@ -130,31 +130,35 @@ public class QuestionBankHelper {
      * 从完整的OCR识别文本中提取纯问题内容（忽略选项）
      */
     private String extractPureQuestionContent(String fullText) {
-        if (fullText == null) return "";
+        if (fullText == null || fullText.isEmpty()) return "";
         
-        // 查找选项标记的位置，支持多种格式：
-        // 1. 字母+中英文句号：A.、A．、a.、a．
-        // 2. 括号+字母+中英文句号：（A）.、(A).、【A】.、[A].
-        // 3. 数字+中英文句号：1.、1．
-        // 4. 字母+括号：A）、A)、a）、a)
-        // 5. 括号+字母：（A）、(A)、【A】、[A]
-        Pattern pattern = Pattern.compile(
-            "(?:[A-Za-z][。．])|" +  // 字母+中英文句号
-            "(?:\\（[A-Za-z]\\）[。．]|\\([A-Za-z]\\)[。．]|\\【[A-Za-z]\\】[。．]|\\[[A-Za-z]\\][。．])|" +  // 括号+字母+中英文句号
-            "(?:[0-9][。．])|" +  // 数字+中英文句号
-            "(?:[A-Za-z]\\）|[A-Za-z]\\)|" +  // 字母+右括号
-            "(?:\\（[A-Za-z]\\）|\\([A-Za-z]\\)|\\【[A-Za-z]\\】|\\[[A-Za-z]\\])",  // 括号+字母
-            Pattern.CASE_INSENSITIVE
-        );
-        
-        Matcher matcher = pattern.matcher(fullText);
-        
-        if (matcher.find()) {
-            // 提取选项前的文本作为纯问题内容
-            return fullText.substring(0, matcher.start()).trim();
+        try {
+            // 查找选项标记的位置，支持多种格式：
+            // 1. 字母+中英文句号：A.、A．、a.、a．
+            // 2. 括号+字母+中英文句号：（A）.、(A).、【A】.、[A].
+            // 3. 数字+中英文句号：1.、1．
+            // 4. 字母+括号：A）、A)、a）、a)
+            // 5. 括号+字母：（A）、(A)、【A】、[A]
+            Pattern pattern = Pattern.compile(
+                "(?:[A-Za-z][。．])|" +  // 字母+中英文句号
+                "(?:\\（[A-Za-z]\\）[。．]|\\([A-Za-z]\\)[。．]|\\【[A-Za-z]\\】[。．]|\\[[A-Za-z]\\][。．])|" +  // 括号+字母+中英文句号
+                "(?:[0-9][。．])|" +  // 数字+中英文句号
+                "(?:[A-Za-z]\\）|[A-Za-z]\\)|" +  // 字母+右括号
+                "(?:\\（[A-Za-z]\\）|\\([A-Za-z]\\)|\\【[A-Za-z]\\】|\\[[A-Za-z]\\])",  // 括号+字母
+                Pattern.CASE_INSENSITIVE
+            );
+            
+            Matcher matcher = pattern.matcher(fullText);
+            
+            if (matcher.find()) {
+                // 提取选项前的文本作为纯问题内容
+                return fullText.substring(0, matcher.start()).trim();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "提取纯问题内容失败: " + e.getMessage());
         }
         
-        // 如果没有找到选项标记，返回完整文本
+        // 如果没有找到选项标记或发生异常，返回完整文本
         return fullText;
     }
 
@@ -254,37 +258,46 @@ public class QuestionBankHelper {
             String bankTextForMatch;
             double optionMatchBonus = 0.0; // 初始化选项匹配奖励
             
-            // 根据题型决定匹配内容
-            if (question.type == QuestionType.SINGLE || question.type == QuestionType.MULTIPLE) {
-                // 选择题：包含题干和选项
-                String ocrQuestionPart = extractPureQuestionContent(cleanedOCRText);
-                ocrTextForMatch = ocrQuestionPart;
-                
-                // 构建题库题目的题干部分
-                bankTextForMatch = cleanOCRText(question.question);
-                
-                // 提取OCR输入中的选项内容
-                List<String> ocrOptions = extractOptionsFromOCRText(cleanedOCRText);
-                
-                // 计算选项匹配度（不考虑顺序）
-                if (!ocrOptions.isEmpty() && question.options != null && !question.options.isEmpty()) {
-                    optionMatchBonus = calculateOptionMatching(ocrOptions, question.options);
-                    Log.d(TAG, "Question ID " + question.id + " option match bonus: " + optionMatchBonus);
+            try {
+                // 根据题型决定匹配内容
+                if (question.type == QuestionType.SINGLE || question.type == QuestionType.MULTIPLE) {
+                    // 选择题：包含题干和选项
+                    String ocrQuestionPart = extractPureQuestionContent(cleanedOCRText);
+                    ocrTextForMatch = ocrQuestionPart;
+                    
+                    // 构建题库题目的题干部分
+                    bankTextForMatch = cleanOCRText(question.question);
+                    
+                    // 提取OCR输入中的选项内容
+                    List<String> ocrOptions = extractOptionsFromOCRText(cleanedOCRText);
+                    
+                    // 计算选项匹配度（不考虑顺序）
+                    if (!ocrOptions.isEmpty() && question.options != null && !question.options.isEmpty()) {
+                        optionMatchBonus = calculateOptionMatching(ocrOptions, question.options);
+                        Log.d(TAG, "Question ID " + question.id + " option match bonus: " + optionMatchBonus);
+                    }
+                } else {
+                    // 判断题、简答题：只包含题干
+                    ocrTextForMatch = extractPureQuestionContent(cleanedOCRText);
+                    bankTextForMatch = cleanOCRText(question.question);
                 }
-            } else {
-                // 判断题、简答题：只包含题干
-                ocrTextForMatch = extractPureQuestionContent(cleanedOCRText);
-                bankTextForMatch = cleanOCRText(question.question);
-            }
-            
-            // 计算相似度分数，选择题增加选项匹配奖励
-            double baseScore = calculateSimilarity(ocrTextForMatch, bankTextForMatch, keywords);
-            double totalScore = baseScore + optionMatchBonus;
-            Log.d(TAG, "Question ID " + question.id + " base score: " + baseScore + ", total score: " + totalScore);
-            
-            if (totalScore > highestScore) {
-                highestScore = totalScore;
-                bestMatch = question;
+                
+                // 跳过空字符串的匹配
+                if (ocrTextForMatch.isEmpty() || bankTextForMatch.isEmpty()) {
+                    continue;
+                }
+                
+                // 计算相似度分数，选择题增加选项匹配奖励
+                double baseScore = calculateSimilarity(ocrTextForMatch, bankTextForMatch, keywords);
+                double totalScore = baseScore + optionMatchBonus;
+                Log.d(TAG, "Question ID " + question.id + " base score: " + baseScore + ", total score: " + totalScore);
+                
+                if (totalScore > highestScore) {
+                    highestScore = totalScore;
+                    bestMatch = question;
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "查找最佳匹配失败: " + e.getMessage());
             }
         }
         

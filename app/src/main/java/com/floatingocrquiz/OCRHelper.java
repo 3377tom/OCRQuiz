@@ -122,6 +122,12 @@ public class OCRHelper {
                                 Log.d(TAG, "识别到的单词数量: " + result.getWordList().size());
                                 resultText[0] = formatResult(result);
                                 Log.d(TAG, "格式化后的识别结果: " + resultText[0]);
+                                
+                                // 检查识别结果是否为空
+                                if (resultText[0].isEmpty()) {
+                                    Log.e(TAG, "OCR识别结果为空");
+                                    resultText[0] = "[ERROR] 识别结果为空";
+                                }
                             } else {
                                 Log.e(TAG, "OCR识别结果的WordList为空");
                                 resultText[0] = "[ERROR] 识别结果为空";
@@ -217,9 +223,16 @@ public class OCRHelper {
                 public void onResult(GeneralResult result) {
                     try {
                         if (result != null && result.getWordList() != null) {
-                            callback.onOcrComplete(formatResult(result));
+                            String formattedResult = formatResult(result);
+                            if (formattedResult.isEmpty()) {
+                                Log.e(TAG, "OCR识别结果为空");
+                                callback.onOcrComplete("[ERROR] 识别结果为空");
+                            } else {
+                                callback.onOcrComplete(formattedResult);
+                            }
                         } else {
-                            callback.onOcrComplete("");
+                            Log.e(TAG, "OCR识别结果为空");
+                            callback.onOcrComplete("[ERROR] 识别结果为空");
                         }
                     } finally {
                         // 识别完成后删除临时文件

@@ -79,10 +79,7 @@ public class ScreenSelectionView extends View {
         textPaint.setColor(Color.WHITE);
         textPaint.setTextSize(24f);
         textPaint.setStrokeWidth(2f);
-        textPaint.setShadowColor(Color.BLACK);
-        textPaint.setShadowDx(2f);
-        textPaint.setShadowDy(2f);
-        textPaint.setShadowRadius(3f);
+        textPaint.setShadowLayer(3f, 2f, 2f, Color.BLACK);
     }
 
     @Override

@@ -647,30 +647,31 @@ public class QuestionBankHelper {
             return reorderedOptions;
         }
         
-        // 创建已匹配选项的集合，避免重复添加
-        Set<Integer> matchedBankIndices = new HashSet<>();
-        
-        // 首先添加与OCR选项匹配的题库选项，保持OCR选项顺序
+        // 遍历OCR选项列表，保持OCR选项的原始顺序
         for (String ocrOption : ocrOptions) {
             String cleanedOcrOption = cleanOCRText(ocrOption);
-            for (int i = 0; i < bankOptions.size(); i++) {
-                if (!matchedBankIndices.contains(i)) {
-                    String cleanedBankOption = cleanOCRText(bankOptions.get(i));
-                    // 使用相似度匹配，提高容错率
-                    if (calculateSimilarity(cleanedOcrOption, cleanedBankOption, new ArrayList<>()) > 0.9) {
-                        reorderedOptions.add(bankOptions.get(i));
-                        matchedBankIndices.add(i);
-                        break;
-                    }
+            boolean foundMatch = false;
+            
+            // 在题库选项中查找匹配项
+            for (String bankOption : bankOptions) {
+                String cleanedBankOption = cleanOCRText(bankOption);
+                // 使用相似度匹配，提高容错率
+                if (calculateSimilarity(cleanedOcrOption, cleanedBankOption, new ArrayList<>()) > 0.9) {
+                    reorderedOptions.add(bankOption);
+                    foundMatch = true;
+                    break;
                 }
+            }
+            
+            // 如果未找到匹配项，添加OCR识别的选项内容
+            if (!foundMatch) {
+                reorderedOptions.add(ocrOption);
             }
         }
         
-        // 添加剩余未匹配的题库选项
-        for (int i = 0; i < bankOptions.size(); i++) {
-            if (!matchedBankIndices.contains(i)) {
-                reorderedOptions.add(bankOptions.get(i));
-            }
+        // 如果没有匹配到任何选项，返回原始题库选项
+        if (reorderedOptions.isEmpty()) {
+            reorderedOptions.addAll(bankOptions);
         }
         
         return reorderedOptions;
@@ -680,24 +681,19 @@ public class QuestionBankHelper {
      * 检查指定选项是否为正确答案
      */
     private boolean isOptionCorrect(String option, List<String> bankOptions, String answer) {
-        // 找到当前选项在原始题库中的索引
-        int originalIndex = -1;
+        // 遍历原始题库选项，找到匹配的选项
         for (int i = 0; i < bankOptions.size(); i++) {
-            if (bankOptions.get(i).equals(option)) {
-                originalIndex = i;
-                break;
+            String bankOption = bankOptions.get(i);
+            // 使用相似度匹配，提高容错率
+            if (calculateSimilarity(cleanOCRText(option), cleanOCRText(bankOption), new ArrayList<>()) > 0.9) {
+                // 将原始索引转换为选项标签（A, B, C...）
+                char optionLabel = (char) ('A' + i);
+                // 检查该选项标签是否包含在答案中
+                return answer.indexOf(optionLabel) != -1;
             }
         }
         
-        if (originalIndex == -1) {
-            return false;
-        }
-        
-        // 将索引转换为选项标签（A, B, C...）
-        char optionLabel = (char) ('A' + originalIndex);
-        
-        // 检查该选项标签是否包含在答案中
-        return answer.indexOf(optionLabel) != -1;
+        return false;
     }
 
     /**

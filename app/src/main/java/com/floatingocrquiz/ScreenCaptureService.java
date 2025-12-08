@@ -200,7 +200,7 @@ public class ScreenCaptureService extends Service {
             boolean isFirstCapture = ocrApplication.isFirstCapture();
             
             // 设置延时时间：第一次截图3000ms，后续200ms
-            long delayTime = isFirstCapture ? 3000 : 200;
+            long delayTime = isFirstCapture ? 5000 : 200;
             
             // 创建虚拟显示，根据是否是第一次截图设置不同的延迟时间
             handler.postDelayed(new Runnable() {

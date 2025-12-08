@@ -8,10 +8,14 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.Uri;
-import android.provider.Settings;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
+import android.graphics.Rect;
+import android.media.projection.MediaProjection;
+import android.net.Uri;
+import android.provider.Settings;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
@@ -57,6 +61,10 @@ public class FloatingWindowService extends Service {
     private int initialY;
     private float initialTouchX;
     private float initialTouchY;
+    
+    // 文字颜色相关
+    private int currentTextColor = Color.WHITE;
+    private int currentShadowColor = Color.BLACK;
 
     @Override
     public void onCreate() {
@@ -185,6 +193,11 @@ public class FloatingWindowService extends Service {
                         layoutParams.y = initialY + dy;
                         windowManager.updateViewLayout(floatingView, layoutParams);
                         return true;
+                    
+                    case MotionEvent.ACTION_UP:
+                        // 拖拽结束后更新文字颜色以适应新背景
+                        updateTextColorBasedOnBackground();
+                        return true;
 
                     default:
                         return false;
@@ -214,6 +227,127 @@ public class FloatingWindowService extends Service {
         }
     }
 
+    /**
+     * 计算颜色亮度，0-255，值越大越亮
+     */
+    private int calculateLuminance(int color) {
+        int red = Color.red(color);
+        int green = Color.green(color);
+        int blue = Color.blue(color);
+        return (int) Math.sqrt(0.299 * red * red + 0.587 * green * green + 0.114 * blue * blue);
+    }
+    
+    /**
+     * 更新文字颜色以适应背景色
+     */
+    private void updateTextColorBasedOnBackground() {
+        if (floatingView == null || windowManager == null) {
+            return;
+        }
+        
+        try {
+            // 获取悬浮窗当前位置
+            int x = layoutParams.x;
+            int y = layoutParams.y;
+            
+            // 创建一个小矩形区域，用于采样背景色（悬浮窗左上角位置）
+            Rect rect = new Rect(x, y, x + 10, y + 10);
+            
+            // 获取屏幕截图
+            MediaProjection mediaProjection = ((OCRApplication) getApplication()).getMediaProjection();
+            if (mediaProjection != null) {
+                // 创建ImageReader获取屏幕像素
+                android.media.ImageReader imageReader = android.media.ImageReader.newInstance(
+                        rect.width(), rect.height(), android.graphics.PixelFormat.RGBA_8888, 1);
+                
+                // 创建虚拟显示
+                android.hardware.display.VirtualDisplay virtualDisplay = mediaProjection.createVirtualDisplay(
+                        "BackgroundCapture",
+                        rect.width(), rect.height(), 160,
+                        android.hardware.display.DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                        imageReader.getSurface(), null, null);
+                
+                // 获取图像
+                android.media.Image image = imageReader.acquireLatestImage();
+                if (image != null) {
+                    // 转换为Bitmap
+                    Bitmap bitmap = imageToBitmap(image);
+                    if (bitmap != null) {
+                        // 获取像素颜色（取中心像素）
+                        int centerX = bitmap.getWidth() / 2;
+                        int centerY = bitmap.getHeight() / 2;
+                        int backgroundColor = bitmap.getPixel(centerX, centerY);
+                        
+                        // 计算背景色亮度
+                        int luminance = calculateLuminance(backgroundColor);
+                        
+                        // 根据亮度调整文字颜色：亮度>128使用黑色文字，否则使用白色文字
+                        int newTextColor = luminance > 128 ? Color.BLACK : Color.WHITE;
+                        int newShadowColor = luminance > 128 ? Color.WHITE : Color.BLACK;
+                        
+                        // 更新文字颜色和阴影
+                        if (newTextColor != currentTextColor) {
+                            answerTextView.setTextColor(newTextColor);
+                            answerTextView.setShadowColor(newShadowColor);
+                            currentTextColor = newTextColor;
+                            currentShadowColor = newShadowColor;
+                        }
+                        
+                        bitmap.recycle();
+                    }
+                    image.close();
+                }
+                
+                // 释放资源
+                virtualDisplay.release();
+                imageReader.close();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "更新文字颜色失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 将Image转换为Bitmap
+     */
+    private Bitmap imageToBitmap(android.media.Image image) {
+        try {
+            android.media.Image.Plane[] planes = image.getPlanes();
+            if (planes == null || planes.length == 0) {
+                return null;
+            }
+            
+            android.media.Image.Plane plane = planes[0];
+            java.nio.ByteBuffer buffer = plane.getBuffer();
+            if (buffer == null) {
+                return null;
+            }
+            
+            int pixelStride = plane.getPixelStride();
+            int rowStride = plane.getRowStride();
+            int rowPadding = rowStride - pixelStride * image.getWidth();
+            
+            // 创建Bitmap
+            Bitmap bitmap = Bitmap.createBitmap(
+                    image.getWidth() + rowPadding / pixelStride,
+                    image.getHeight(),
+                    Bitmap.Config.ARGB_8888);
+            bitmap.copyPixelsFromBuffer(buffer);
+            
+            // 裁剪到实际大小
+            bitmap = Bitmap.createBitmap(
+                    bitmap,
+                    0, 0,
+                    image.getWidth(),
+                    image.getHeight());
+            
+            return bitmap;
+        } catch (Exception e) {
+            Log.e(TAG, "将Image转换为Bitmap失败: " + e.getMessage());
+            return null;
+        }
+    }
+    
     public void updateAnswer(String answer) {
         if (answerTextView != null) {
             if (answer == null || answer.isEmpty()) {
@@ -222,6 +356,9 @@ public class FloatingWindowService extends Service {
             } else {
                 answerTextView.setText(getString(R.string.answer_prefix) + answer);
             }
+            
+            // 更新文字颜色以适应背景
+            updateTextColorBasedOnBackground();
         }
     }
 

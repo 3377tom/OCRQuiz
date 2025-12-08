@@ -268,11 +268,18 @@ public class ScreenCaptureService extends Service {
                                 return;
                             } catch (Exception e) {
                                 Log.e(TAG, "使用默认截图范围失败: " + e.getMessage());
-                                // 默认范围无效，继续显示选择覆盖层
+                                // 默认范围无效，继续处理
                             }
                         }
                         
-                        // 显示屏幕选择覆盖层
+                        // 截图识别模式：直接截取全屏，不显示选择框
+                        if (!isSettingDefaultRange) {
+                            processSelectedRegion(bitmap);
+                            releaseVirtualDisplay();
+                            return;
+                        }
+                        
+                        // 设置默认范围模式：显示屏幕选择覆盖层
                         showScreenSelectionOverlay(bitmap);
                         
                         // 发送广播通知浮动窗口服务，截图已完成，清除"正在截图"提示

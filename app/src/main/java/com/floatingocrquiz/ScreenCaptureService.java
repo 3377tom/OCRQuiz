@@ -195,7 +195,14 @@ public class ScreenCaptureService extends Service {
             // 设置ImageAvailableListener
             setImageAvailableListener();
             
-            // 创建虚拟显示，延迟1秒以确保系统提示框消失
+            // 获取OCRApplication实例，检查是否是第一次截图
+            OCRApplication ocrApplication = (OCRApplication) getApplication();
+            boolean isFirstCapture = ocrApplication.isFirstCapture();
+            
+            // 设置延时时间：第一次截图3000ms，后续200ms
+            long delayTime = isFirstCapture ? 3000 : 200;
+            
+            // 创建虚拟显示，根据是否是第一次截图设置不同的延迟时间
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -210,6 +217,9 @@ public class ScreenCaptureService extends Service {
                                 null,
                                 handler
                         );
+                        
+                        // 将第一次截图标志设置为false
+                        ocrApplication.setFirstCapture(false);
                     } catch (Exception e) {
                         Log.e(TAG, "创建虚拟显示失败: " + e.getMessage());
                         // 释放资源
@@ -218,7 +228,7 @@ public class ScreenCaptureService extends Service {
                         requestMediaProjectionPermission();
                     }
                 }
-            }, 1000);
+            }, delayTime);
         } catch (Exception e) {
             Log.e(TAG, "使用缓存MediaProjection截图失败: " + e.getMessage());
             // 释放资源
@@ -304,7 +314,13 @@ public class ScreenCaptureService extends Service {
             // 设置ImageAvailableListener
             setImageAvailableListener();
 
-            // 创建虚拟显示，延迟1秒以确保系统提示框消失
+            // 获取OCRApplication实例，检查是否是第一次截图
+            boolean isFirstCapture = ocrApplication.isFirstCapture();
+            
+            // 设置延时时间：第一次截图3000ms，后续200ms
+            long delayTime = isFirstCapture ? 3000 : 200;
+
+            // 创建虚拟显示，根据是否是第一次截图设置不同的延迟时间
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -330,13 +346,16 @@ public class ScreenCaptureService extends Service {
                                 }
                             }
                         }, 3000); // 3秒超时
+                        
+                        // 将第一次截图标志设置为false
+                        ocrApplication.setFirstCapture(false);
                     } catch (Exception e) {
                         Log.e(TAG, "创建虚拟显示失败: " + e.getMessage());
                         releaseMediaProjection();
                         stopSelf();
                     }
                 }
-            }, 1000);
+            }, delayTime);
 
         } catch (Exception e) {
             Log.e(TAG, "初始化屏幕捕获失败: " + e.getMessage());

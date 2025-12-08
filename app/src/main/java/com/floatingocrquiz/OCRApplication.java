@@ -8,6 +8,7 @@ public class OCRApplication extends Application {
     private static final String TAG = "OCRApplication";
     private static OCRApplication instance;
     private MediaProjection mediaProjection;
+    private boolean isFirstCapture = true;
 
     @Override
     public void onCreate() {
@@ -32,5 +33,13 @@ public class OCRApplication extends Application {
             mediaProjection.stop();
             mediaProjection = null;
         }
+    }
+
+    public boolean isFirstCapture() {
+        return isFirstCapture;
+    }
+
+    public void setFirstCapture(boolean firstCapture) {
+        isFirstCapture = firstCapture;
     }
 }

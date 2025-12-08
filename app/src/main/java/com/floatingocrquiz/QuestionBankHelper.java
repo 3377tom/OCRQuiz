@@ -641,8 +641,12 @@ public class QuestionBankHelper {
     private List<String> getReorderedOptions(List<String> bankOptions, List<String> ocrOptions) {
         // 如果没有OCR选项或题库选项，直接返回原始顺序
         if (ocrOptions == null || ocrOptions.isEmpty() || bankOptions == null || bankOptions.isEmpty()) {
+            Log.d(TAG, "没有OCR选项或题库选项，直接返回原始顺序");
             return new ArrayList<>(bankOptions);
         }
+        
+        Log.d(TAG, "原始题库选项: " + bankOptions);
+        Log.d(TAG, "OCR提取的选项: " + ocrOptions);
         
         // 创建已匹配选项的集合，避免重复添加
         Set<Integer> matchedBankIndices = new HashSet<>();
@@ -650,18 +654,20 @@ public class QuestionBankHelper {
         List<String> reorderedOptions = new ArrayList<>();
         
         // 遍历OCR识别的选项，按照OCR顺序处理
-        for (String ocrOption : ocrOptions) {
+        for (int ocrIndex = 0; ocrIndex < ocrOptions.size(); ocrIndex++) {
+            String ocrOption = ocrOptions.get(ocrIndex);
             // 清理OCR选项文本
             String cleanedOcrOption = cleanOCRText(ocrOption);
             
             // 如果OCR选项文本为空，跳过
             if (cleanedOcrOption.isEmpty()) {
+                Log.d(TAG, "OCR选项" + ocrIndex + "文本为空，跳过");
                 continue;
             }
             
             // 初始化最佳匹配变量
             int bestMatchIndex = -1;
-            double highestSimilarity = 0.5; // 降低阈值，提高匹配成功率
+            double highestSimilarity = 0.0;
             
             // 在题库选项中查找最佳匹配
             for (int i = 0; i < bankOptions.size(); i++) {
@@ -676,6 +682,8 @@ public class QuestionBankHelper {
                 // 计算相似度
                 double similarity = calculateSimilarity(cleanedOcrOption, cleanedBankOption, new ArrayList<>());
                 
+                Log.d(TAG, "OCR选项" + ocrIndex + "(" + cleanedOcrOption + ") 与题库选项" + i + "(" + cleanedBankOption + ") 的相似度: " + similarity);
+                
                 // 更新最佳匹配
                 if (similarity > highestSimilarity) {
                     highestSimilarity = similarity;
@@ -685,23 +693,28 @@ public class QuestionBankHelper {
             
             // 如果找到最佳匹配，添加到结果列表
             if (bestMatchIndex != -1) {
+                Log.d(TAG, "OCR选项" + ocrIndex + "最佳匹配为题库选项" + bestMatchIndex + "，相似度: " + highestSimilarity);
                 reorderedOptions.add(bankOptions.get(bestMatchIndex));
                 matchedBankIndices.add(bestMatchIndex);
             }
         }
         
         // 添加剩余未匹配的题库选项
+        Log.d(TAG, "已匹配的题库选项索引: " + matchedBankIndices);
         for (int i = 0; i < bankOptions.size(); i++) {
             if (!matchedBankIndices.contains(i)) {
+                Log.d(TAG, "添加未匹配的题库选项" + i + "到结果列表");
                 reorderedOptions.add(bankOptions.get(i));
             }
         }
         
         // 确保结果列表与原始题库选项数量相同
         if (reorderedOptions.size() != bankOptions.size()) {
+            Log.d(TAG, "结果列表与原始题库选项数量不同，返回原始顺序");
             return new ArrayList<>(bankOptions);
         }
         
+        Log.d(TAG, "重新排序后的选项: " + reorderedOptions);
         return reorderedOptions;
     }
     

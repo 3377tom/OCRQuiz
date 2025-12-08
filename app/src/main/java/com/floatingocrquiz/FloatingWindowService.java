@@ -288,7 +288,8 @@ public class FloatingWindowService extends Service {
                         // 更新文字颜色和阴影
                         if (newTextColor != currentTextColor) {
                             answerTextView.setTextColor(newTextColor);
-                            answerTextView.setShadowColor(newShadowColor);
+                            // 设置文字阴影：模糊半径1，X偏移1，Y偏移1，阴影颜色
+                            answerTextView.setShadowLayer(1, 1, 1, newShadowColor);
                             currentTextColor = newTextColor;
                             currentShadowColor = newShadowColor;
                         }

@@ -27,6 +27,11 @@ import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.text.SpannableString;
+import android.text.Spannable;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.CharacterStyle;
+import android.text.style.UpdateAppearance;
 
 import androidx.core.app.NotificationCompat;
 
@@ -387,11 +392,81 @@ public class FloatingWindowService extends Service {
                 // 清除"正在截图"提示
                 answerTextView.setText("");
             } else {
-                answerTextView.setText(getString(R.string.answer_prefix) + answer);
+                String fullText = getString(R.string.answer_prefix) + answer;
+                // 解析并高亮显示正确选项
+                answerTextView.setText(formatHighlightedText(fullText), TextView.BufferType.SPANNABLE);
             }
             
             // 更新文字颜色以适应背景
             updateTextColorBasedOnBackground();
+        }
+    }
+    
+    /**
+     * 解析带有高亮标记的文本，将正确选项显示为红色
+     */
+    private SpannableString formatHighlightedText(String text) {
+        SpannableString spannableString = new SpannableString(text);
+        
+        // 查找所有[CORRECT]标签对
+        int startIndex = 0;
+        while (startIndex < text.length()) {
+            int correctStart = text.indexOf("[CORRECT]", startIndex);
+            if (correctStart == -1) {
+                break;
+            }
+            
+            int correctEnd = text.indexOf("[/CORRECT]", correctStart + "[CORRECT]".length());
+            if (correctEnd == -1) {
+                break;
+            }
+            
+            // 计算实际内容的起始和结束位置（去除标签）
+            int contentStart = correctStart + "[CORRECT]".length();
+            int contentEnd = correctEnd;
+            
+            // 设置红色文字颜色
+            spannableString.setSpan(
+                    new ForegroundColorSpan(Color.RED),
+                    contentStart,
+                    contentEnd,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
+            
+            // 为红色文字添加合适的阴影效果，增强可读性
+            spannableString.setSpan(
+                    new ShadowSpan(Color.DKGRAY, 1, 1, 2f),
+                    contentStart,
+                    contentEnd,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
+            
+            // 继续查找下一个标签对
+            startIndex = correctEnd + "[/CORRECT]".length();
+        }
+        
+        return spannableString;
+    }
+    
+    /**
+     * 自定义ShadowSpan类，用于为特定文本添加阴影效果
+     */
+    private static class ShadowSpan extends CharacterStyle implements UpdateAppearance {
+        private final int color;
+        private final float dx;
+        private final float dy;
+        private final float radius;
+        
+        public ShadowSpan(int color, float dx, float dy, float radius) {
+            this.color = color;
+            this.dx = dx;
+            this.dy = dy;
+            this.radius = radius;
+        }
+        
+        @Override
+        public void updateDrawState(TextPaint tp) {
+            tp.setShadowLayer(radius, dx, dy, color);
         }
     }
 

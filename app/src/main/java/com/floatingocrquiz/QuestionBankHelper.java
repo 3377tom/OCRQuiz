@@ -120,7 +120,9 @@ public class QuestionBankHelper {
         Question bestMatch = findBestMatch(cleanedQuestion, keywords);
         
         if (bestMatch != null) {
-            return formatAnswer(bestMatch);
+            // 提取OCR输入中的选项内容，用于后续按顺序组织选项
+            List<String> ocrOptions = extractOptionsFromOCRText(cleanedQuestion);
+            return formatAnswer(bestMatch, ocrOptions);
         } else {
             return "题库中未找到相关答案";
         }
@@ -564,9 +566,9 @@ public class QuestionBankHelper {
     }
 
     /**
-     * 格式化答案
+     * 格式化答案，支持按OCR选项顺序重新组织选项
      */
-    private String formatAnswer(Question question) {
+    private String formatAnswer(Question question, List<String> ocrOptions) {
         StringBuilder sb = new StringBuilder();
         
         // 添加题目类型
@@ -591,9 +593,22 @@ public class QuestionBankHelper {
         // 添加选项（如果有）
         if (question.options != null && !question.options.isEmpty()) {
             sb.append("选项:\n");
+            
+            // 获取按OCR选项顺序匹配后的题库选项顺序
+            List<String> reorderedOptions = getReorderedOptions(question.options, ocrOptions);
+            
             char optionLabel = 'A';
-            for (String option : question.options) {
-                sb.append(optionLabel++ + ". " + option + "\n");
+            for (String option : reorderedOptions) {
+                // 检查当前选项是否为正确答案
+                boolean isCorrect = isOptionCorrect(option, question.options, question.answer);
+                
+                if (isCorrect) {
+                    // 标记正确选项，使用特殊格式以便前端高亮显示
+                    sb.append("[CORRECT]" + optionLabel + ". " + option + "[/CORRECT]\n");
+                } else {
+                    sb.append(optionLabel + ". " + option + "\n");
+                }
+                optionLabel++;
             }
         }
         
@@ -618,6 +633,71 @@ public class QuestionBankHelper {
         }
         
         return sb.toString();
+    }
+    
+    /**
+     * 根据OCR选项顺序重新组织题库选项
+     */
+    private List<String> getReorderedOptions(List<String> bankOptions, List<String> ocrOptions) {
+        List<String> reorderedOptions = new ArrayList<>();
+        
+        // 如果没有OCR选项，直接返回原始顺序
+        if (ocrOptions == null || ocrOptions.isEmpty()) {
+            reorderedOptions.addAll(bankOptions);
+            return reorderedOptions;
+        }
+        
+        // 创建已匹配选项的集合，避免重复添加
+        Set<Integer> matchedBankIndices = new HashSet<>();
+        
+        // 首先添加与OCR选项匹配的题库选项，保持OCR选项顺序
+        for (String ocrOption : ocrOptions) {
+            String cleanedOcrOption = cleanOCRText(ocrOption);
+            for (int i = 0; i < bankOptions.size(); i++) {
+                if (!matchedBankIndices.contains(i)) {
+                    String cleanedBankOption = cleanOCRText(bankOptions.get(i));
+                    // 使用相似度匹配，提高容错率
+                    if (calculateSimilarity(cleanedOcrOption, cleanedBankOption, new ArrayList<>()) > 0.9) {
+                        reorderedOptions.add(bankOptions.get(i));
+                        matchedBankIndices.add(i);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // 添加剩余未匹配的题库选项
+        for (int i = 0; i < bankOptions.size(); i++) {
+            if (!matchedBankIndices.contains(i)) {
+                reorderedOptions.add(bankOptions.get(i));
+            }
+        }
+        
+        return reorderedOptions;
+    }
+    
+    /**
+     * 检查指定选项是否为正确答案
+     */
+    private boolean isOptionCorrect(String option, List<String> bankOptions, String answer) {
+        // 找到当前选项在原始题库中的索引
+        int originalIndex = -1;
+        for (int i = 0; i < bankOptions.size(); i++) {
+            if (bankOptions.get(i).equals(option)) {
+                originalIndex = i;
+                break;
+            }
+        }
+        
+        if (originalIndex == -1) {
+            return false;
+        }
+        
+        // 将索引转换为选项标签（A, B, C...）
+        char optionLabel = (char) ('A' + originalIndex);
+        
+        // 检查该选项标签是否包含在答案中
+        return answer.indexOf(optionLabel) != -1;
     }
 
     /**

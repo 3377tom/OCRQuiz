@@ -29,6 +29,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.text.SpannableString;
 import android.text.Spannable;
+import android.text.TextPaint;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.CharacterStyle;
 import android.text.style.UpdateAppearance;

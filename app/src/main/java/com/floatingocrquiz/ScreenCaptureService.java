@@ -192,20 +192,33 @@ public class ScreenCaptureService extends Service {
                     1
             );
 
-            // 创建虚拟显示
-            virtualDisplay = mediaProjection.createVirtualDisplay(
-                    VIRTUAL_DISPLAY_NAME,
-                    screenWidth,
-                    screenHeight,
-                    screenDensity,
-                    VIRTUAL_DISPLAY_FLAGS,
-                    imageReader.getSurface(),
-                    null,
-                    handler
-            );
-            
             // 设置ImageAvailableListener
             setImageAvailableListener();
+            
+            // 创建虚拟显示，延迟1秒以确保系统提示框消失
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        virtualDisplay = mediaProjection.createVirtualDisplay(
+                                VIRTUAL_DISPLAY_NAME,
+                                screenWidth,
+                                screenHeight,
+                                screenDensity,
+                                VIRTUAL_DISPLAY_FLAGS,
+                                imageReader.getSurface(),
+                                null,
+                                handler
+                        );
+                    } catch (Exception e) {
+                        Log.e(TAG, "创建虚拟显示失败: " + e.getMessage());
+                        // 释放资源
+                        releaseMediaProjection();
+                        // 重新请求权限
+                        requestMediaProjectionPermission();
+                    }
+                }
+            }, 1000);
         } catch (Exception e) {
             Log.e(TAG, "使用缓存MediaProjection截图失败: " + e.getMessage());
             // 释放资源
@@ -291,28 +304,39 @@ public class ScreenCaptureService extends Service {
             // 设置ImageAvailableListener
             setImageAvailableListener();
 
-            // 创建虚拟显示
-            virtualDisplay = mediaProjection.createVirtualDisplay(
-                    VIRTUAL_DISPLAY_NAME,
-                    screenWidth,
-                    screenHeight,
-                    screenDensity,
-                    VIRTUAL_DISPLAY_FLAGS,
-                    imageReader.getSurface(),
-                    null,
-                    handler
-            );
-
-            // 添加超时处理，防止截图流程无限等待
+            // 创建虚拟显示，延迟1秒以确保系统提示框消失
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    if (virtualDisplay != null && imageReader != null) {
-                        Log.e(TAG, "截图超时，释放资源");
-                        releaseVirtualDisplay();
+                    try {
+                        virtualDisplay = mediaProjection.createVirtualDisplay(
+                                VIRTUAL_DISPLAY_NAME,
+                                screenWidth,
+                                screenHeight,
+                                screenDensity,
+                                VIRTUAL_DISPLAY_FLAGS,
+                                imageReader.getSurface(),
+                                null,
+                                handler
+                        );
+
+                        // 添加超时处理，防止截图流程无限等待
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (virtualDisplay != null && imageReader != null) {
+                                    Log.e(TAG, "截图超时，释放资源");
+                                    releaseVirtualDisplay();
+                                }
+                            }
+                        }, 3000); // 3秒超时
+                    } catch (Exception e) {
+                        Log.e(TAG, "创建虚拟显示失败: " + e.getMessage());
+                        releaseMediaProjection();
+                        stopSelf();
                     }
                 }
-            }, 3000); // 3秒超时
+            }, 1000);
 
         } catch (Exception e) {
             Log.e(TAG, "初始化屏幕捕获失败: " + e.getMessage());

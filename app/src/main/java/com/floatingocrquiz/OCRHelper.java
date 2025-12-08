@@ -43,6 +43,15 @@ public class OCRHelper {
     public static synchronized OCRHelper getInstance(Context context) {
         if (instance == null) {
             instance = new OCRHelper(context);
+            // 等待初始化完成，最多等待5秒
+            try {
+                long startTime = System.currentTimeMillis();
+                while (!instance.isInitialized && System.currentTimeMillis() - startTime < 5000) {
+                    Thread.sleep(100);
+                }
+            } catch (InterruptedException e) {
+                Log.e(TAG, "初始化等待被中断: " + e.getMessage());
+            }
         }
         return instance;
     }
@@ -82,9 +91,19 @@ public class OCRHelper {
         try {
             Log.d(TAG, "开始OCR识别，Bitmap尺寸: " + bitmap.getWidth() + "x" + bitmap.getHeight());
             
+            // 等待OCR SDK初始化完成，最多等待5秒
             if (!isInitialized) {
-                Log.e(TAG, "OCR SDK尚未初始化完成");
-                return "[ERROR] OCR SDK尚未初始化完成";
+                Log.d(TAG, "OCR SDK尚未初始化完成，等待初始化...");
+                long startTime = System.currentTimeMillis();
+                while (!isInitialized && System.currentTimeMillis() - startTime < 5000) {
+                    Thread.sleep(100);
+                }
+                if (!isInitialized) {
+                    Log.e(TAG, "OCR SDK初始化超时");
+                    return "[ERROR] OCR SDK初始化超时";
+                } else {
+                    Log.d(TAG, "OCR SDK初始化完成");
+                }
             }
             
             // 构建通用文字识别参数

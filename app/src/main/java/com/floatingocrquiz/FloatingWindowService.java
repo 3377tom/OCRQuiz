@@ -297,18 +297,32 @@ public class FloatingWindowService extends Service {
                             
                             // 根据亮度调整文字颜色：亮度>128使用黑色文字，否则使用白色文字
                             int newTextColor = luminance > 128 ? Color.BLACK : Color.WHITE;
-                            int newShadowColor = luminance > 128 ? Color.WHITE : Color.BLACK;
                             
-                            Log.d(TAG, "当前文字颜色: " + currentTextColor + ", 新文字颜色: " + newTextColor);
+                            // 优化阴影设置：黑色文字使用淡灰色阴影，白色文字使用深灰色阴影，增强可读性
+                            int newShadowColor;
+                            float shadowRadius;
+                            if (newTextColor == Color.BLACK) {
+                                // 黑色文字使用淡灰色阴影，增大模糊半径以增强效果
+                                newShadowColor = Color.GRAY;
+                                shadowRadius = 2f;
+                            } else {
+                                // 白色文字使用深灰色阴影，保持适度模糊
+                                newShadowColor = Color.DKGRAY;
+                                shadowRadius = 1.5f;
+                            }
+                            
+                            Log.d(TAG, "当前文字颜色: " + currentTextColor + ", 新文字颜色: " + newTextColor + ", 新阴影颜色: " + newShadowColor);
                             
                             // 更新文字颜色和阴影
                             if (newTextColor != currentTextColor) {
                                 answerTextView.setTextColor(newTextColor);
-                                // 设置文字阴影：模糊半径1，X偏移1，Y偏移1，阴影颜色
-                                answerTextView.setShadowLayer(1, 1, 1, newShadowColor);
+                                // 清除旧阴影
+                                answerTextView.setShadowLayer(0, 0, 0, Color.TRANSPARENT);
+                                // 设置新阴影：模糊半径，X偏移，Y偏移，阴影颜色
+                                answerTextView.setShadowLayer(shadowRadius, 1, 1, newShadowColor);
                                 currentTextColor = newTextColor;
                                 currentShadowColor = newShadowColor;
-                                Log.d(TAG, "文字颜色已更新为: " + newTextColor);
+                                Log.d(TAG, "文字颜色已更新为: " + newTextColor + ", 阴影颜色: " + newShadowColor);
                             }
                             
                             bitmap.recycle();

@@ -639,39 +639,52 @@ public class QuestionBankHelper {
      * 根据OCR选项顺序重新组织题库选项
      */
     private List<String> getReorderedOptions(List<String> bankOptions, List<String> ocrOptions) {
-        List<String> reorderedOptions = new ArrayList<>();
-        
         // 如果没有OCR选项，直接返回原始顺序
         if (ocrOptions == null || ocrOptions.isEmpty()) {
-            reorderedOptions.addAll(bankOptions);
-            return reorderedOptions;
+            return new ArrayList<>(bankOptions);
         }
         
-        // 遍历OCR选项列表，保持OCR选项的原始顺序
+        // 创建一个与题库选项数量相同的结果列表
+        List<String> reorderedOptions = new ArrayList<>(bankOptions.size());
+        
+        // 创建已匹配选项的集合，避免重复添加
+        Set<Integer> matchedBankIndices = new HashSet<>();
+        
+        // 1. 首先处理OCR识别的选项，按照OCR顺序添加匹配的题库选项
         for (String ocrOption : ocrOptions) {
             String cleanedOcrOption = cleanOCRText(ocrOption);
             boolean foundMatch = false;
             
             // 在题库选项中查找匹配项
-            for (String bankOption : bankOptions) {
-                String cleanedBankOption = cleanOCRText(bankOption);
-                // 使用相似度匹配，提高容错率
-                if (calculateSimilarity(cleanedOcrOption, cleanedBankOption, new ArrayList<>()) > 0.9) {
-                    reorderedOptions.add(bankOption);
-                    foundMatch = true;
-                    break;
+            for (int i = 0; i < bankOptions.size(); i++) {
+                if (!matchedBankIndices.contains(i)) {
+                    String cleanedBankOption = cleanOCRText(bankOptions.get(i));
+                    // 使用相似度匹配，提高容错率
+                    if (calculateSimilarity(cleanedOcrOption, cleanedBankOption, new ArrayList<>()) > 0.9) {
+                        reorderedOptions.add(bankOptions.get(i));
+                        matchedBankIndices.add(i);
+                        foundMatch = true;
+                        break;
+                    }
                 }
             }
             
-            // 如果未找到匹配项，添加OCR识别的选项内容
+            // 如果未找到匹配项，跳过该OCR选项
             if (!foundMatch) {
-                reorderedOptions.add(ocrOption);
+                continue;
             }
         }
         
-        // 如果没有匹配到任何选项，返回原始题库选项
-        if (reorderedOptions.isEmpty()) {
-            reorderedOptions.addAll(bankOptions);
+        // 2. 添加剩余未匹配的题库选项
+        for (int i = 0; i < bankOptions.size(); i++) {
+            if (!matchedBankIndices.contains(i)) {
+                reorderedOptions.add(bankOptions.get(i));
+            }
+        }
+        
+        // 3. 如果结果列表为空或数量不足，直接返回原始题库选项
+        if (reorderedOptions.isEmpty() || reorderedOptions.size() < bankOptions.size()) {
+            return new ArrayList<>(bankOptions);
         }
         
         return reorderedOptions;
@@ -684,8 +697,8 @@ public class QuestionBankHelper {
         // 遍历原始题库选项，找到匹配的选项
         for (int i = 0; i < bankOptions.size(); i++) {
             String bankOption = bankOptions.get(i);
-            // 使用相似度匹配，提高容错率
-            if (calculateSimilarity(cleanOCRText(option), cleanOCRText(bankOption), new ArrayList<>()) > 0.9) {
+            // 使用精确匹配，确保选项完全一致
+            if (bankOption.equals(option)) {
                 // 将原始索引转换为选项标签（A, B, C...）
                 char optionLabel = (char) ('A' + i);
                 // 检查该选项标签是否包含在答案中

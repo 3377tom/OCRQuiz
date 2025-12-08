@@ -208,6 +208,9 @@ public class FloatingWindowService extends Service {
         // 添加浮动窗口到系统
         windowManager.addView(floatingView, layoutParams);
         isWindowShowing = true;
+        
+        // 初始化文字颜色，使其适应当前背景
+        updateTextColorBasedOnBackground();
     }
 
     private void startScreenCapture() {
@@ -245,67 +248,82 @@ public class FloatingWindowService extends Service {
             return;
         }
         
-        try {
-            // 获取悬浮窗当前位置
-            int x = layoutParams.x;
-            int y = layoutParams.y;
-            
-            // 创建一个小矩形区域，用于采样背景色（悬浮窗左上角位置）
-            Rect rect = new Rect(x, y, x + 10, y + 10);
-            
-            // 获取屏幕截图
-            MediaProjection mediaProjection = ((OCRApplication) getApplication()).getMediaProjection();
-            if (mediaProjection != null) {
-                // 创建ImageReader获取屏幕像素
-                android.media.ImageReader imageReader = android.media.ImageReader.newInstance(
-                        rect.width(), rect.height(), android.graphics.PixelFormat.RGBA_8888, 1);
-                
-                // 创建虚拟显示
-                android.hardware.display.VirtualDisplay virtualDisplay = mediaProjection.createVirtualDisplay(
-                        "BackgroundCapture",
-                        rect.width(), rect.height(), 160,
-                        android.hardware.display.DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-                        imageReader.getSurface(), null, null);
-                
-                // 获取图像
-                android.media.Image image = imageReader.acquireLatestImage();
-                if (image != null) {
-                    // 转换为Bitmap
-                    Bitmap bitmap = imageToBitmap(image);
-                    if (bitmap != null) {
-                        // 获取像素颜色（取中心像素）
-                        int centerX = bitmap.getWidth() / 2;
-                        int centerY = bitmap.getHeight() / 2;
-                        int backgroundColor = bitmap.getPixel(centerX, centerY);
-                        
-                        // 计算背景色亮度
-                        int luminance = calculateLuminance(backgroundColor);
-                        
-                        // 根据亮度调整文字颜色：亮度>128使用黑色文字，否则使用白色文字
-                        int newTextColor = luminance > 128 ? Color.BLACK : Color.WHITE;
-                        int newShadowColor = luminance > 128 ? Color.WHITE : Color.BLACK;
-                        
-                        // 更新文字颜色和阴影
-                        if (newTextColor != currentTextColor) {
-                            answerTextView.setTextColor(newTextColor);
-                            // 设置文字阴影：模糊半径1，X偏移1，Y偏移1，阴影颜色
-                            answerTextView.setShadowLayer(1, 1, 1, newShadowColor);
-                            currentTextColor = newTextColor;
-                            currentShadowColor = newShadowColor;
-                        }
-                        
-                        bitmap.recycle();
-                    }
-                    image.close();
-                }
-                
-                // 释放资源
-                virtualDisplay.release();
-                imageReader.close();
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "更新文字颜色失败: " + e.getMessage());
+        // 获取悬浮窗当前位置
+        int x = layoutParams.x;
+        int y = layoutParams.y;
+        
+        // 创建一个小矩形区域，用于采样背景色（悬浮窗左上角位置）
+        Rect rect = new Rect(x, y, x + 10, y + 10);
+        
+        // 获取屏幕截图
+        MediaProjection mediaProjection = ((OCRApplication) getApplication()).getMediaProjection();
+        if (mediaProjection == null) {
+            Log.d(TAG, "MediaProjection为空，无法获取背景色");
+            return;
         }
+        
+        // 创建ImageReader获取屏幕像素
+        android.media.ImageReader imageReader = android.media.ImageReader.newInstance(
+                rect.width(), rect.height(), android.graphics.PixelFormat.RGBA_8888, 1);
+        
+        // 创建虚拟显示
+        android.hardware.display.VirtualDisplay virtualDisplay = mediaProjection.createVirtualDisplay(
+                "BackgroundCapture",
+                rect.width(), rect.height(), 160,
+                android.hardware.display.DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                imageReader.getSurface(), null, null);
+        
+        // 设置ImageAvailableListener，当有图像可用时处理
+        imageReader.setOnImageAvailableListener(new android.media.ImageReader.OnImageAvailableListener() {
+            @Override
+            public void onImageAvailable(android.media.ImageReader reader) {
+                try {
+                    // 获取图像
+                    android.media.Image image = reader.acquireLatestImage();
+                    if (image != null) {
+                        // 转换为Bitmap
+                        Bitmap bitmap = imageToBitmap(image);
+                        if (bitmap != null) {
+                            // 获取像素颜色（取中心像素）
+                            int centerX = bitmap.getWidth() / 2;
+                            int centerY = bitmap.getHeight() / 2;
+                            int backgroundColor = bitmap.getPixel(centerX, centerY);
+                            
+                            Log.d(TAG, "获取到背景色: " + backgroundColor + ", 位置: (" + x + ", " + y + ")");
+                            
+                            // 计算背景色亮度
+                            int luminance = calculateLuminance(backgroundColor);
+                            Log.d(TAG, "背景色亮度: " + luminance);
+                            
+                            // 根据亮度调整文字颜色：亮度>128使用黑色文字，否则使用白色文字
+                            int newTextColor = luminance > 128 ? Color.BLACK : Color.WHITE;
+                            int newShadowColor = luminance > 128 ? Color.WHITE : Color.BLACK;
+                            
+                            Log.d(TAG, "当前文字颜色: " + currentTextColor + ", 新文字颜色: " + newTextColor);
+                            
+                            // 更新文字颜色和阴影
+                            if (newTextColor != currentTextColor) {
+                                answerTextView.setTextColor(newTextColor);
+                                // 设置文字阴影：模糊半径1，X偏移1，Y偏移1，阴影颜色
+                                answerTextView.setShadowLayer(1, 1, 1, newShadowColor);
+                                currentTextColor = newTextColor;
+                                currentShadowColor = newShadowColor;
+                                Log.d(TAG, "文字颜色已更新为: " + newTextColor);
+                            }
+                            
+                            bitmap.recycle();
+                        }
+                        image.close();
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "处理图像失败: " + e.getMessage());
+                } finally {
+                    // 释放资源
+                    virtualDisplay.release();
+                    reader.close();
+                }
+            }
+        }, null);
     }
     
     /**

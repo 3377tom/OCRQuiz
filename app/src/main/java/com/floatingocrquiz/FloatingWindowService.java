@@ -17,6 +17,7 @@ import android.media.projection.MediaProjection;
 import android.net.Uri;
 import android.provider.Settings;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.Gravity;

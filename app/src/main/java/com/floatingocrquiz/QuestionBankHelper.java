@@ -655,7 +655,7 @@ public class QuestionBankHelper {
         endKeep = Math.min(7, Math.max(6, endKeep));
         
         // 查找括号内的内容，保留重要信息
-        Pattern bracketPattern = Pattern.compile("[（(\[\{].*?[）)\]\}]");
+        Pattern bracketPattern = Pattern.compile("[（(\\\\[\\\\{].*?[）)\\\\]\\\\}]");
         Matcher matcher = bracketPattern.matcher(text);
         
         if (matcher.find()) {

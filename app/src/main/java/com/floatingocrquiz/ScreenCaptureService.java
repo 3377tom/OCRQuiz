@@ -541,8 +541,8 @@ public class ScreenCaptureService extends Service {
                         String answer = questionBankHelper.queryAnswer(recognizedText);
                         Log.d(TAG, "题库查询结果: " + answer);
                         
-                        // 组合显示识别结果和答案（调试用）
-                        displayText = "识别到的文字:\n" + recognizedText + "\n\n" + answer;
+                        // 只显示答案，不显示OCR识别结果（注释掉调试用的OCR文字显示）
+                        displayText = answer;
                     }
                 } else {
                     // OCR识别失败或没有识别到文字

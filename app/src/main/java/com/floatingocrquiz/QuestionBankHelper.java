@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.Arrays;
 
 public class QuestionBankHelper {
-    private static final String TAG = "QuestionBankHelper";
+    private static final String TAG = "com.floatingocrquiz.QuestionBankHelper";
     private static final String FILE_NAME = "question_bank.json";
     
     private static QuestionBankHelper instance;
@@ -145,7 +145,7 @@ public class QuestionBankHelper {
                 "(?:[A-Za-z][。．])|" +  // 字母+中英文句号
                 "(?:\\（[A-Za-z]\\）[。．]|\\([A-Za-z]\\)[。．]|\\【[A-Za-z]\\】[。．]|\\[[A-Za-z]\\][。．])|" +  // 括号+字母+中英文句号
                 "(?:[0-9][。．])|" +  // 数字+中英文句号
-                "(?:[A-Za-z]\\）|[A-Za-z]\\)|" +  // 字母+右括号
+                "(?:[A-Za-z]\\）|[A-Za-z]\\))|" +  // 字母+右括号
                 "(?:\\（[A-Za-z]\\）|\\([A-Za-z]\\)|\\【[A-Za-z]\\】|\\[[A-Za-z]\\])",  // 括号+字母
                 Pattern.CASE_INSENSITIVE
             );
@@ -587,8 +587,9 @@ public class QuestionBankHelper {
                 break;
         }
         
-        // 添加问题
-        sb.append("问题: " + question.question + "\n");
+        // 添加问题（如果太长则智能压缩）
+        String compressedQuestion = compressLongText(question.question, 20, 10);
+        sb.append("问题: " + compressedQuestion + "\n");
         
         // 添加选项（如果有）
         if (question.options != null && !question.options.isEmpty()) {
@@ -603,8 +604,8 @@ public class QuestionBankHelper {
                 boolean isCorrect = isOptionCorrect(option, question.options, question.answer);
                 
                 if (isCorrect) {
-                    // 标记正确选项，使用特殊格式以便前端高亮显示
-                    sb.append("[CORRECT]" + optionLabel + ". " + option + "[/CORRECT]\n");
+                    // 简化标记，只在选项标签前添加[CORRECT]，不再包裹整个选项
+                    sb.append(optionLabel + ". [CORRECT]" + option + "\n");
                 } else {
                     sb.append(optionLabel + ". " + option + "\n");
                 }
@@ -616,27 +617,89 @@ public class QuestionBankHelper {
         sb.append("答案: ");
         
         if (question.type == QuestionType.TRUE_FALSE) {
+            // 判断题显示完整答案
             sb.append(question.answer.equals("TRUE") ? "正确" : "错误");
         } else if (question.type == QuestionType.SHORT) {
+            // 简答题显示完整答案
             sb.append(question.answer);
         } else {
-            // 选择题
-            sb.append(question.answer);
-            
-            // 如果是单选题，显示选项内容
-            if (question.type == QuestionType.SINGLE && question.answer.length() == 1) {
-                int index = question.answer.charAt(0) - 'A';
-                if (index >= 0 && index < question.options.size()) {
-                    sb.append(" (" + question.options.get(index) + ")");
-                }
-            }
+            // // 选择题：只通过红色高亮显示正确选项，不单独显示答案
+            // sb.append(question.answer);
+            // 
+            // // 如果是单选题，显示选项内容
+            // if (question.type == QuestionType.SINGLE && question.answer.length() == 1) {
+            //     int index = question.answer.charAt(0) - 'A';
+            //     if (index >= 0 && index < question.options.size()) {
+            //         sb.append(" (" + question.options.get(index) + ")");
+            //     }
+            // }
+            sb.append("请查看红色高亮选项");
         }
         
         return sb.toString();
     }
     
     /**
-     * 根据OCR选项顺序重新组织题库选项
+     * 智能压缩长文本
+     * @param text 原始文本
+     * @param startKeep 开头保留长度
+     * @param endKeep 结尾保留长度
+     * @return 压缩后的文本
+     */
+    private String compressLongText(String text, int startKeep, int endKeep) {
+        if (text == null || text.length() <= startKeep + endKeep + 10) {
+            return text; // 文本长度适中，不需要压缩
+        }
+        
+        // 调整末尾保留长度为6-7个文字
+        endKeep = Math.min(7, Math.max(6, endKeep));
+        
+        // 查找括号内的内容，保留重要信息
+        Pattern bracketPattern = Pattern.compile("[（(\[\{].*?[）)\]\}]");
+        Matcher matcher = bracketPattern.matcher(text);
+        
+        if (matcher.find()) {
+            int keyPartStart = matcher.start();
+            int keyPartEnd = matcher.end();
+            
+            // 确保keyPart在文本中间位置
+            if (keyPartStart > startKeep && keyPartEnd < text.length() - endKeep) {
+                // 保留括号前后的2-3个文字
+                int beforeBracket = Math.max(0, keyPartStart - 3);
+                int afterBracket = Math.min(text.length(), keyPartEnd + 3);
+                
+                return text.substring(0, startKeep) + "..." + 
+                       text.substring(beforeBracket, afterBracket) + "..." + 
+                       text.substring(text.length() - endKeep);
+            }
+        }
+        
+        // 查找连续的特殊字符（如下划线），保留前后内容
+        Pattern underlinePattern = Pattern.compile("_{3,}");
+        matcher = underlinePattern.matcher(text);
+        
+        if (matcher.find()) {
+            int underlineStart = matcher.start();
+            int underlineEnd = matcher.end();
+            
+            // 确保下划线在文本中间位置
+            if (underlineStart > startKeep && underlineEnd < text.length() - endKeep) {
+                // 保留下划线前后的2-3个文字
+                int beforeUnderline = Math.max(0, underlineStart - 3);
+                int afterUnderline = Math.min(text.length(), underlineEnd + 3);
+                
+                return text.substring(0, startKeep) + "..." + 
+                       text.substring(beforeUnderline, afterUnderline) + "..." + 
+                       text.substring(text.length() - endKeep);
+            }
+        }
+        
+        // 默认压缩方式：保留开头和结尾
+        return text.substring(0, startKeep) + "..." + text.substring(text.length() - endKeep);
+    }
+    
+    /**
+     * 获取按OCR选项顺序重新组织的题库选项
      */
     private List<String> getReorderedOptions(List<String> bankOptions, List<String> ocrOptions) {
         // 如果没有OCR选项或题库选项，直接返回原始顺序

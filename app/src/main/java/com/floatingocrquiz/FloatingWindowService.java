@@ -71,12 +71,20 @@ public class FloatingWindowService extends Service {
     // 文字颜色相关
     private int currentTextColor = Color.WHITE;
     private int currentShadowColor = Color.BLACK;
+    
+    // 防抖机制
+    private Handler colorUpdateHandler;
+    private Runnable colorUpdateRunnable;
+    private static final long COLOR_UPDATE_DELAY = 500; // 500ms防抖延迟
 
     @Override
     public void onCreate() {
         super.onCreate();
         createNotificationChannel();
         startForeground(NOTIFICATION_ID, createNotification());
+        
+        // 初始化防抖handler
+        colorUpdateHandler = new Handler();
         
         // 注册广播接收器
         answerReceiver = new BroadcastReceiver() {
@@ -201,8 +209,22 @@ public class FloatingWindowService extends Service {
                         return true;
                     
                     case MotionEvent.ACTION_UP:
-                        // 拖拽结束后更新文字颜色以适应新背景
-                        updateTextColorBasedOnBackground();
+                        // 拖拽结束后更新文字颜色以适应新背景，添加防抖
+                        // 移除之前的延迟任务
+                        if (colorUpdateRunnable != null) {
+                            colorUpdateHandler.removeCallbacks(colorUpdateRunnable);
+                        }
+                        
+                        // 创建新的延迟任务
+                        colorUpdateRunnable = new Runnable() {
+                            @Override
+                            public void run() {
+                                updateTextColorBasedOnBackground();
+                            }
+                        };
+                        
+                        // 延迟执行
+                        colorUpdateHandler.postDelayed(colorUpdateRunnable, COLOR_UPDATE_DELAY);
                         return true;
 
                     default:
@@ -254,12 +276,30 @@ public class FloatingWindowService extends Service {
             return;
         }
         
-        // 获取悬浮窗当前位置
+        // 获取悬浮窗当前位置和尺寸
         int x = layoutParams.x;
         int y = layoutParams.y;
+        int windowWidth = floatingView.getWidth();
+        int windowHeight = floatingView.getHeight();
         
-        // 创建一个小矩形区域，用于采样背景色（悬浮窗左上角位置）
-        Rect rect = new Rect(x, y, x + 10, y + 10);
+        // 创建一个更大的矩形区域，用于采样背景色（悬浮窗中心位置，扩大采样范围）
+        int sampleSize = 30;
+        int centerX = x + windowWidth / 2;
+        int centerY = y + windowHeight / 2;
+        Rect rect = new Rect(centerX - sampleSize/2, centerY - sampleSize/2, centerX + sampleSize/2, centerY + sampleSize/2);
+        
+        // 确保采样区域在屏幕范围内
+        Point screenSize = new Point();
+        windowManager.getDefaultDisplay().getSize(screenSize);
+        rect.left = Math.max(0, rect.left);
+        rect.top = Math.max(0, rect.top);
+        rect.right = Math.min(screenSize.x, rect.right);
+        rect.bottom = Math.min(screenSize.y, rect.bottom);
+        
+        // 只有当采样区域有效时才进行处理
+        if (rect.width() <= 0 || rect.height() <= 0) {
+            return;
+        }
         
         // 获取屏幕截图
         MediaProjection mediaProjection = ((OCRApplication) getApplication()).getMediaProjection();
@@ -290,19 +330,25 @@ public class FloatingWindowService extends Service {
                         // 转换为Bitmap
                         Bitmap bitmap = imageToBitmap(image);
                         if (bitmap != null) {
-                            // 获取像素颜色（取中心像素）
-                            int centerX = bitmap.getWidth() / 2;
-                            int centerY = bitmap.getHeight() / 2;
-                            int backgroundColor = bitmap.getPixel(centerX, centerY);
+                            // 计算平均背景色，而不是只取一个像素
+                            int averageColor = calculateAverageColor(bitmap);
                             
-                            Log.d(TAG, "获取到背景色: " + backgroundColor + ", 位置: (" + x + ", " + y + ")");
+                            Log.d(TAG, "获取到背景色: " + averageColor + ", 位置: (" + centerX + ", " + centerY + ")");
                             
                             // 计算背景色亮度
-                            int luminance = calculateLuminance(backgroundColor);
+                            int luminance = calculateLuminance(averageColor);
                             Log.d(TAG, "背景色亮度: " + luminance);
                             
                             // 根据亮度调整文字颜色：亮度>128使用黑色文字，否则使用白色文字
-                            int newTextColor = luminance > 128 ? Color.BLACK : Color.WHITE;
+                            // 增加一定的亮度阈值缓冲，避免频繁切换
+                            int newTextColor;
+                            if (currentTextColor == Color.BLACK) {
+                                // 当前是黑色文字，只有当亮度明显变暗时才切换为白色
+                                newTextColor = luminance < 100 ? Color.WHITE : Color.BLACK;
+                            } else {
+                                // 当前是白色文字，只有当亮度明显变亮时才切换为黑色
+                                newTextColor = luminance > 150 ? Color.BLACK : Color.WHITE;
+                            }
                             
                             // 优化阴影设置：黑色文字使用淡灰色阴影，白色文字使用深灰色阴影，增强可读性
                             int newShadowColor;
@@ -344,6 +390,33 @@ public class FloatingWindowService extends Service {
                 }
             }
         }, null);
+    }
+    
+    /**
+     * 计算Bitmap的平均颜色
+     */
+    private int calculateAverageColor(Bitmap bitmap) {
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+        int totalPixels = width * height;
+        long redSum = 0;
+        long greenSum = 0;
+        long blueSum = 0;
+        
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                int pixel = bitmap.getPixel(x, y);
+                redSum += Color.red(pixel);
+                greenSum += Color.green(pixel);
+                blueSum += Color.blue(pixel);
+            }
+        }
+        
+        int avgRed = (int) (redSum / totalPixels);
+        int avgGreen = (int) (greenSum / totalPixels);
+        int avgBlue = (int) (blueSum / totalPixels);
+        
+        return Color.rgb(avgRed, avgGreen, avgBlue);
     }
     
     /**
@@ -397,9 +470,25 @@ public class FloatingWindowService extends Service {
                 // 解析并高亮显示正确选项
                 answerTextView.setText(formatHighlightedText(fullText), TextView.BufferType.SPANNABLE);
             }
+        }
+        
+        // 限制悬浮窗最大尺寸，避免撑得过大
+        if (windowManager != null && layoutParams != null && floatingView != null) {
+            // 获取屏幕尺寸，限制悬浮窗最大为屏幕的60%
+            Point screenSize = new Point();
+            windowManager.getDefaultDisplay().getSize(screenSize);
+            int maxWidth = (int) (screenSize.x * 0.6);
+            int maxHeight = (int) (screenSize.y * 0.6);
             
-            // 更新文字颜色以适应背景
-            updateTextColorBasedOnBackground();
+            // 调整窗口大小
+            if (layoutParams.width > maxWidth) {
+                layoutParams.width = maxWidth;
+                windowManager.updateViewLayout(floatingView, layoutParams);
+            }
+            if (layoutParams.height > maxHeight) {
+                layoutParams.height = maxHeight;
+                windowManager.updateViewLayout(floatingView, layoutParams);
+            }
         }
     }
     
@@ -409,7 +498,7 @@ public class FloatingWindowService extends Service {
     private SpannableString formatHighlightedText(String text) {
         SpannableString spannableString = new SpannableString(text);
         
-        // 查找所有[CORRECT]标签对
+        // 查找所有[CORRECT]标签，不再使用闭标签
         int startIndex = 0;
         while (startIndex < text.length()) {
             int correctStart = text.indexOf("[CORRECT]", startIndex);
@@ -417,33 +506,41 @@ public class FloatingWindowService extends Service {
                 break;
             }
             
-            int correctEnd = text.indexOf("[/CORRECT]", correctStart + "[CORRECT]".length());
-            if (correctEnd == -1) {
-                break;
+            // 计算标签结束位置
+            int tagEnd = correctStart + "[CORRECT]".length();
+            
+            // 查找当前选项的结束位置（换行符或字符串结束）
+            int optionEnd = text.indexOf("\n", tagEnd);
+            if (optionEnd == -1) {
+                optionEnd = text.length();
             }
             
-            // 计算实际内容的起始和结束位置（去除标签）
-            int contentStart = correctStart + "[CORRECT]".length();
-            int contentEnd = correctEnd;
-            
-            // 设置红色文字颜色
+            // 设置红色文字颜色（从标签结束到选项结束）
             spannableString.setSpan(
                     new ForegroundColorSpan(Color.RED),
-                    contentStart,
-                    contentEnd,
+                    tagEnd,
+                    optionEnd,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             );
             
             // 为红色文字添加合适的阴影效果，增强可读性
             spannableString.setSpan(
                     new ShadowSpan(Color.DKGRAY, 1, 1, 2f),
-                    contentStart,
-                    contentEnd,
+                    tagEnd,
+                    optionEnd,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             );
             
-            // 继续查找下一个标签对
-            startIndex = correctEnd + "[/CORRECT]".length();
+            // 删除[CORRECT]标签文本
+            spannableString.setSpan(
+                    new ForegroundColorSpan(Color.TRANSPARENT),
+                    correctStart,
+                    tagEnd,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
+            
+            // 继续查找下一个标签
+            startIndex = optionEnd;
         }
         
         return spannableString;

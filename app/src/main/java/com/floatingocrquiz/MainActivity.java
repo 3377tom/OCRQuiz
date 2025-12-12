@@ -15,7 +15,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.view.LayoutInflater;
-import android.widget.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
 
 import java.io.InputStream;
 import java.io.BufferedReader;
@@ -45,8 +45,8 @@ public class MainActivity extends AppCompatActivity {
         importButton = findViewById(R.id.import_button);
         deleteAllButton = findViewById(R.id.delete_all_button);
         
-        // 初始化题库助手
-        questionBankHelper = new QuestionBankHelper(this);
+        // 初始化题库助手（使用单例模式）
+        questionBankHelper = QuestionBankHelper.getInstance(this);
 
         startButton.setOnClickListener(v -> startFloatingWindow());
         stopButton.setOnClickListener(v -> stopFloatingWindow());

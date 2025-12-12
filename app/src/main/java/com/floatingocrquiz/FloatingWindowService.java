@@ -14,6 +14,9 @@ import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.media.projection.MediaProjection;
+import android.media.Image;
+import android.media.ImageFormat;
+import android.media.ImageReader;
 import android.net.Uri;
 import android.provider.Settings;
 import android.os.Build;
@@ -313,8 +316,8 @@ public class FloatingWindowService extends Service {
         }
         
         // 创建ImageReader获取屏幕像素
-        android.media.ImageReader imageReader = android.media.ImageReader.newInstance(
-                rect.width(), rect.height(), android.media.ImageFormat.RGBA_8888, 1);
+        ImageReader imageReader = ImageReader.newInstance(
+                rect.width(), rect.height(), ImageFormat.RGBA_8888, 1);
         
         // 创建虚拟显示
         android.hardware.display.VirtualDisplay virtualDisplay = mediaProjection.createVirtualDisplay(
@@ -324,12 +327,12 @@ public class FloatingWindowService extends Service {
                 imageReader.getSurface(), null, null);
         
         // 设置ImageAvailableListener，当有图像可用时处理
-        imageReader.setOnImageAvailableListener(new android.media.ImageReader.OnImageAvailableListener() {
+        imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
             @Override
-            public void onImageAvailable(android.media.ImageReader reader) {
+            public void onImageAvailable(ImageReader reader) {
                 try {
                     // 获取图像
-                    android.media.Image image = reader.acquireLatestImage();
+                    Image image = reader.acquireLatestImage();
                     if (image != null) {
                         // 转换为Bitmap
                         Bitmap bitmap = imageToBitmap(image);

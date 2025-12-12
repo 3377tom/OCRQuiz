@@ -317,7 +317,7 @@ public class FloatingWindowService extends Service {
         
         // 创建ImageReader获取屏幕像素
         ImageReader imageReader = ImageReader.newInstance(
-                rect.width(), rect.height(), ImageFormat.RGBA_8888, 1);
+                        rect.width(), rect.height(), android.graphics.PixelFormat.RGBA_8888, 1);
         
         // 创建虚拟显示
         android.hardware.display.VirtualDisplay virtualDisplay = mediaProjection.createVirtualDisplay(

@@ -15,7 +15,6 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.media.projection.MediaProjection;
 import android.media.Image;
-import android.media.ImageFormat;
 import android.media.ImageReader;
 import android.net.Uri;
 import android.provider.Settings;

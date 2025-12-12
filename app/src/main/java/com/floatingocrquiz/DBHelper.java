@@ -95,7 +95,19 @@ public class DBHelper extends SQLiteOpenHelper {
         try {
             db.beginTransaction();
             for (QuestionBankHelper.Question question : questions) {
-                long id = insertQuestion(question);
+                ContentValues values = new ContentValues();
+                values.put(COLUMN_TYPE, question.type.name());
+                values.put(COLUMN_QUESTION, question.question);
+                
+                // 将选项列表转换为JSON字符串
+                if (question.options != null && !question.options.isEmpty()) {
+                    JSONArray optionsArray = new JSONArray(question.options);
+                    values.put(COLUMN_OPTIONS, optionsArray.toString());
+                }
+                
+                values.put(COLUMN_ANSWER, question.answer);
+                
+                long id = db.insert(TABLE_QUESTIONS, null, values);
                 if (id != -1) {
                     successCount++;
                 }

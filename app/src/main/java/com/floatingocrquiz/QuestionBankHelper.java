@@ -27,12 +27,12 @@ public class QuestionBankHelper {
     private static final String FILE_NAME = "question_bank.json";
     
     private static QuestionBankHelper instance;
-    private List<Question> questionList;
+    private DBHelper dbHelper;
     private Context context;
 
     private QuestionBankHelper(Context context) {
         this.context = context;
-        this.questionList = new ArrayList<>();
+        this.dbHelper = new DBHelper(context);
         loadQuestionBank();
     }
     
@@ -49,9 +49,15 @@ public class QuestionBankHelper {
     }
 
     /**
-     * 从assets目录加载JSON格式的题库
+     * 从assets目录加载JSON格式的题库并导入到数据库
      */
     private void loadQuestionBank() {
+        // 检查数据库中是否已有题目
+        if (dbHelper.getQuestionCount() > 0) {
+            Log.d(TAG, "数据库中已有 " + dbHelper.getQuestionCount() + " 道题目，无需重复导入");
+            return;
+        }
+
         try {
             InputStream is = context.getAssets().open(FILE_NAME);
             BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
@@ -69,6 +75,7 @@ public class QuestionBankHelper {
             JSONObject jsonObject = new JSONObject(sb.toString());
             JSONArray questionsArray = jsonObject.getJSONArray("questions");
             
+            List<Question> tempQuestions = new ArrayList<>();
             for (int i = 0; i < questionsArray.length(); i++) {
                 JSONObject questionObj = questionsArray.getJSONObject(i);
                 Question question = new Question();
@@ -88,10 +95,12 @@ public class QuestionBankHelper {
                 }
                 
                 question.answer = questionObj.getString("answer");
-                questionList.add(question);
+                tempQuestions.add(question);
             }
             
-            Log.d(TAG, "成功加载题库，共 " + questionList.size() + " 道题目");
+            // 批量插入到数据库
+            int insertedCount = dbHelper.batchInsertQuestions(tempQuestions);
+            Log.d(TAG, "成功从JSON导入 " + insertedCount + " 道题目到数据库");
             
         } catch (IOException | JSONException e) {
             Log.e(TAG, "加载题库失败: " + e.getMessage());
@@ -255,7 +264,23 @@ public class QuestionBankHelper {
         Question bestMatch = null;
         double highestScore = 0.0;
         
-        for (Question question : questionList) {
+        // 先从OCR文本中提取纯问题内容
+        String pureQuestion = extractPureQuestionContent(cleanedOCRText);
+        
+        // 使用数据库模糊搜索缩小范围，提高效率
+        List<Question> candidateQuestions;
+        if (pureQuestion.length() > 5) {
+            // 提取关键词进行数据库搜索
+            String searchKeyword = keywords.isEmpty() ? pureQuestion.substring(0, Math.min(10, pureQuestion.length())) : keywords.get(0);
+            candidateQuestions = dbHelper.searchQuestions(searchKeyword);
+            Log.d(TAG, "数据库搜索到 " + candidateQuestions.size() + " 道候选题目");
+        } else {
+            // 对于短文本，直接获取所有题目
+            candidateQuestions = dbHelper.getAllQuestions();
+            Log.d(TAG, "获取所有 " + candidateQuestions.size() + " 道题目进行匹配");
+        }
+        
+        for (Question question : candidateQuestions) {
             String ocrTextForMatch;
             String bankTextForMatch;
             double optionMatchBonus = 0.0; // 初始化选项匹配奖励
@@ -264,8 +289,7 @@ public class QuestionBankHelper {
                 // 根据题型决定匹配内容
                 if (question.type == QuestionType.SINGLE || question.type == QuestionType.MULTIPLE) {
                     // 选择题：包含题干和选项
-                    String ocrQuestionPart = extractPureQuestionContent(cleanedOCRText);
-                    ocrTextForMatch = ocrQuestionPart;
+                    ocrTextForMatch = pureQuestion;
                     
                     // 构建题库题目的题干部分
                     bankTextForMatch = cleanOCRText(question.question);
@@ -280,7 +304,7 @@ public class QuestionBankHelper {
                     }
                 } else {
                     // 判断题、简答题：只包含题干
-                    ocrTextForMatch = extractPureQuestionContent(cleanedOCRText);
+                    ocrTextForMatch = pureQuestion;
                     bankTextForMatch = cleanOCRText(question.question);
                 }
                 
@@ -544,6 +568,69 @@ public class QuestionBankHelper {
     /**
      * 计算内容重叠度得分
      */
+    
+    /**
+     * 从JSON字符串导入题库
+     * @param jsonContent JSON格式的题库内容
+     * @return 导入成功的题目数量
+     */
+    public int importQuestionBank(String jsonContent) {
+        try {
+            JSONObject jsonObject = new JSONObject(jsonContent);
+            JSONArray questionsArray = jsonObject.getJSONArray("questions");
+            
+            List<Question> tempQuestions = new ArrayList<>();
+            for (int i = 0; i < questionsArray.length(); i++) {
+                JSONObject questionObj = questionsArray.getJSONObject(i);
+                Question question = new Question();
+                
+                question.id = questionObj.getInt("id");
+                question.type = QuestionType.valueOf(questionObj.getString("type"));
+                question.question = questionObj.getString("question");
+                
+                // 解析选项
+                if (questionObj.has("options")) {
+                    JSONArray optionsArray = questionObj.getJSONArray("options");
+                    List<String> options = new ArrayList<>();
+                    for (int j = 0; j < optionsArray.length(); j++) {
+                        options.add(optionsArray.getString(j));
+                    }
+                    question.options = options;
+                }
+                
+                question.answer = questionObj.getString("answer");
+                tempQuestions.add(question);
+            }
+            
+            // 批量插入到数据库
+            int insertedCount = dbHelper.batchInsertQuestions(tempQuestions);
+            Log.d(TAG, "成功从JSON导入 " + insertedCount + " 道题目到数据库");
+            return insertedCount;
+            
+        } catch (JSONException e) {
+            Log.e(TAG, "解析JSON失败: " + e.getMessage());
+            e.printStackTrace();
+            return 0;
+        }
+    }
+    
+    /**
+     * 删除所有题库
+     * @return 是否删除成功
+     */
+    public boolean deleteAllQuestions() {
+        int rowsDeleted = dbHelper.deleteAllQuestions();
+        Log.d(TAG, "成功删除 " + rowsDeleted + " 道题目");
+        return rowsDeleted > 0;
+    }
+    
+    /**
+     * 获取数据库中题目数量
+     * @return 题目数量
+     */
+    public int getQuestionCount() {
+        return dbHelper.getQuestionCount();
+    }
     private double calculateOverlapScore(String text1, String text2) {
         // 检查较短文本是否是较长文本的子串
         if (text1.contains(text2) || text2.contains(text1)) {

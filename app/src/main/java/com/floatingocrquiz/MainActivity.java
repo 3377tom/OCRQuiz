@@ -15,14 +15,22 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.view.LayoutInflater;
+import android.util.Log;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_OVERLAY_PERMISSION = 1;
     private static final int REQUEST_MEDIA_PROJECTION = 2;
+    private static final int REQUEST_FILE_SELECT = 3;
 
     private Button startButton;
     private Button stopButton;
+    private Button importButton;
+    private Button deleteAllButton;
     private View customToastView;
     private ViewGroup customToastWindowManager;
 
@@ -33,9 +41,13 @@ public class MainActivity extends AppCompatActivity {
 
         startButton = findViewById(R.id.start_button);
         stopButton = findViewById(R.id.stop_button);
+        importButton = findViewById(R.id.import_button);
+        deleteAllButton = findViewById(R.id.delete_all_button);
 
         startButton.setOnClickListener(v -> startFloatingWindow());
         stopButton.setOnClickListener(v -> stopFloatingWindow());
+        importButton.setOnClickListener(v -> selectJsonFile());
+        deleteAllButton.setOnClickListener(v -> deleteAllQuestions());
 
         // 检查并申请必要权限
         checkPermissions();
@@ -95,6 +107,78 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     
+    // 选择JSON文件
+    private void selectJsonFile() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("application/json");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        startActivityForResult(Intent.createChooser(intent, "选择JSON文件"), REQUEST_FILE_SELECT);
+    }
+
+    // 处理文件选择结果
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_OVERLAY_PERMISSION) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+                Toast.makeText(this, R.string.overlay_permission_denied, Toast.LENGTH_SHORT).show();
+            }
+        } else if (requestCode == REQUEST_MEDIA_PROJECTION) {
+            // 处理屏幕录制权限结果
+            if (resultCode == RESULT_OK && data != null) {
+                // 将权限结果传递给ScreenCaptureService
+                Intent serviceIntent = new Intent(this, ScreenCaptureService.class);
+                serviceIntent.putExtra(ScreenCaptureService.EXTRA_RESULT_CODE, resultCode);
+                serviceIntent.putExtra(ScreenCaptureService.EXTRA_RESULT_INTENT, data);
+                ContextCompat.startForegroundService(this, serviceIntent);
+            } else {
+                Toast.makeText(this, R.string.media_projection_permission_denied, Toast.LENGTH_SHORT).show();
+            }
+        } else if (requestCode == REQUEST_FILE_SELECT && resultCode == RESULT_OK) {
+            if (data != null) {
+                Uri uri = data.getData();
+                String jsonContent = readJsonFromUri(uri);
+                if (jsonContent != null) {
+                    importQuestionBank(jsonContent);
+                }
+            }
+        }
+    }
+
+    // 从URI读取JSON内容
+    private String readJsonFromUri(Uri uri) {
+        StringBuilder stringBuilder = new StringBuilder();
+        try (InputStream inputStream = getContentResolver().openInputStream(uri);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                stringBuilder.append(line);
+            }
+            return stringBuilder.toString();
+        } catch (IOException e) {
+            Log.e("MainActivity", "读取JSON文件失败: " + e.getMessage());
+            Toast.makeText(this, "读取JSON文件失败", Toast.LENGTH_SHORT).show();
+            return null;
+        }
+    }
+
+    // 导入题库
+    private void importQuestionBank(String jsonContent) {
+        int importedCount = QuestionBankHelper.getInstance(this).importQuestionBank(jsonContent);
+        if (importedCount > 0) {
+            Toast.makeText(this, String.format(getString(R.string.import_success), importedCount), Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, R.string.import_failure, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // 删除所有题目
+    private void deleteAllQuestions() {
+        QuestionBankHelper.getInstance(this).deleteAllQuestions();
+        Toast.makeText(this, R.string.delete_success, Toast.LENGTH_SHORT).show();
+    }
+
     // 由于MainActivity是Activity，Toast通常不会被拦截，所以暂时保留使用Toast
     // 如果需要，后续可以实现与ScreenCaptureService类似的自定义提示消息功能
 }

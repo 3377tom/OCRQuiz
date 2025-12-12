@@ -2,6 +2,8 @@
     <string name="app_name">Floating OCR Quiz</string>
     <string name="start_floating_window">启动浮动窗口</string>
     <string name="stop_floating_window">停止浮动窗口</string>
+    <string name="import_question_bank">导入题库</string>
+    <string name="delete_all_questions">删除所有题目</string>
     <string name="wait_recognition">等待识别题目...</string>
     <string name="capturing">正在截图...</string>
     <string name="capture_button">截图识别</string>
@@ -9,4 +11,9 @@
     <string name="overlay_permission_denied">需要悬浮窗权限才能使用此功能</string>
     <string name="media_projection_permission_denied">需要屏幕录制权限才能使用截图功能</string>
     <string name="ocr_failed">OCR识别失败</string>
+    <string name="import_success">导入成功，共导入 %d 道题目</string>
+    <string name="import_failed">导入失败</string>
+    <string name="delete_success">删除成功，共删除 %d 道题目</string>
+    <string name="delete_failed">删除失败</string>
+    <string name="select_json_file">请选择JSON格式的题库文件</string>
 </resources>

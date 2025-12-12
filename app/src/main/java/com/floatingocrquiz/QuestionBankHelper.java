@@ -388,8 +388,8 @@ public class QuestionBankHelper {
             return options;
         }
         
-        // 4. 支持小写字母+右括号格式：a）、a)、b）、b)等
-        Pattern pattern4 = Pattern.compile("[a-g][）)]\\s*(.+?)(?=[a-g][）)]|$)", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+        // 4. 支持字母+右括号格式：A）、A)、a）、a)
+        Pattern pattern4 = Pattern.compile("[a-gA-G][）)]\\s*(.+?)(?=[a-gA-G][）)]|$)", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
         Matcher matcher4 = pattern4.matcher(cleanedOCRText);
         while (matcher4.find()) {
             options.add(matcher4.group(1).trim());
@@ -414,10 +414,9 @@ public class QuestionBankHelper {
     }
     
     /**
-     * 计算OCR识别的选项与题库选项的匹配度（不考虑顺序）
+     * 计算选项匹配度
      */
     private double calculateOptionMatching(List<String> ocrOptions, List<String> bankOptions) {
-        // 计算匹配的选项数量
         int matchedCount = 0;
         List<String> cleanedBankOptions = new ArrayList<>();
         
@@ -576,6 +575,26 @@ public class QuestionBankHelper {
     /**
      * 计算内容重叠度得分
      */
+    private double calculateOverlapScore(String text1, String text2) {
+        // 检查较短文本是否是较长文本的子串
+        if (text1.contains(text2) || text2.contains(text1)) {
+            return 1.0;
+        }
+        
+        // 计算两个文本的内容重叠比例
+        int overlapCount = 0;
+        String longerText = text1.length() > text2.length() ? text1 : text2;
+        String shorterText = text1.length() <= text2.length() ? text1 : text2;
+        
+        // 统计较短文本中出现在较长文本中的字符比例
+        for (char c : shorterText.toCharArray()) {
+            if (longerText.indexOf(c) != -1) {
+                overlapCount++;
+            }
+        }
+        
+        return (double) overlapCount / shorterText.length();
+    }
     
     /**
      * 从JSON字符串导入题库
@@ -639,26 +658,6 @@ public class QuestionBankHelper {
     public int getQuestionCount() {
         return dbHelper.getQuestionCount();
     }
-    private double calculateOverlapScore(String text1, String text2) {
-        // 检查较短文本是否是较长文本的子串
-        if (text1.contains(text2) || text2.contains(text1)) {
-            return 1.0;
-        }
-        
-        // 计算两个文本的内容重叠比例
-        int overlapCount = 0;
-        String longerText = text1.length() > text2.length() ? text1 : text2;
-        String shorterText = text1.length() <= text2.length() ? text1 : text2;
-        
-        // 统计较短文本中出现在较长文本中的字符比例
-        for (char c : shorterText.toCharArray()) {
-            if (longerText.indexOf(c) != -1) {
-                overlapCount++;
-            }
-        }
-        
-        return (double) overlapCount / shorterText.length();
-    }
 
     /**
      * 格式化答案，支持按OCR选项顺序重新组织选项
@@ -718,17 +717,35 @@ public class QuestionBankHelper {
             // 简答题显示完整答案
             sb.append(question.answer);
         } else {
-            // // 选择题：只通过红色高亮显示正确选项，不单独显示答案
-            // sb.append(question.answer);
-            // 
-            // // 如果是单选题，显示选项内容
-            // if (question.type == QuestionType.SINGLE && question.answer.length() == 1) {
-            //     int index = question.answer.charAt(0) - 'A';
-            //     if (index >= 0 && index < question.options.size()) {
-            //         sb.append(" (" + question.options.get(index) + ")");
-            //     }
-            // }
-            sb.append("请查看红色高亮选项");
+            // 选择题：根据重新排序后的选项生成正确答案
+            StringBuilder answerBuilder = new StringBuilder();
+            
+            // 获取按OCR选项顺序重新组织的题库选项
+            List<String> reorderedOptions = getReorderedOptions(question.options, ocrOptions);
+            
+            char optionLabel = 'A';
+            boolean hasCorrectAnswer = false;
+            
+            // 遍历重新排序后的选项，找出所有正确答案
+            for (int i = 0; i < reorderedOptions.size(); i++) {
+                String option = reorderedOptions.get(i);
+                boolean isCorrect = isOptionCorrect(option, question.options, question.answer);
+                
+                if (isCorrect) {
+                    if (hasCorrectAnswer) {
+                        answerBuilder.append("、"); // 添加选项分隔符
+                    }
+                    answerBuilder.append(optionLabel); // 添加正确选项标签
+                    hasCorrectAnswer = true;
+                }
+                optionLabel++;
+            }
+            
+            if (hasCorrectAnswer) {
+                sb.append(answerBuilder.toString());
+            } else {
+                sb.append("请查看红色高亮选项");
+            }
         }
         
         return sb.toString();

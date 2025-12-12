@@ -76,7 +76,7 @@ public class FloatingWindowService extends Service {
     // 防抖机制
     private Handler colorUpdateHandler;
     private Runnable colorUpdateRunnable;
-    private static final long COLOR_UPDATE_DELAY = 500; // 500ms防抖延迟
+    private static final long COLOR_UPDATE_DELAY = 200; // 200ms防抖延迟，提高灵敏度
 
     @Override
     public void onCreate() {
@@ -164,6 +164,9 @@ public class FloatingWindowService extends Service {
         layoutParams.gravity = Gravity.TOP | Gravity.START;
         layoutParams.x = 100;
         layoutParams.y = 200;
+        
+        // 设置窗口透明度（0.0-完全透明，1.0-完全不透明）
+        layoutParams.alpha = 0.8f;
 
         // 加载浮动窗口布局
         floatingView = LayoutInflater.from(this).inflate(R.layout.floating_window, null);
@@ -283,8 +286,8 @@ public class FloatingWindowService extends Service {
         int windowWidth = floatingView.getWidth();
         int windowHeight = floatingView.getHeight();
         
-        // 创建一个更大的矩形区域，用于采样背景色（悬浮窗中心位置，扩大采样范围）
-        int sampleSize = 30;
+        // 创建一个更大的矩形区域，用于采样背景色（悬浮窗中心位置，扩大采样范围以提高准确性）
+        int sampleSize = 60;
         int centerX = x + windowWidth / 2;
         int centerY = y + windowHeight / 2;
         Rect rect = new Rect(centerX - sampleSize/2, centerY - sampleSize/2, centerX + sampleSize/2, centerY + sampleSize/2);
@@ -305,13 +308,13 @@ public class FloatingWindowService extends Service {
         // 获取屏幕截图
         MediaProjection mediaProjection = ((OCRApplication) getApplication()).getMediaProjection();
         if (mediaProjection == null) {
-            Log.d(TAG, "MediaProjection为空，无法获取背景色");
+            Log.i(TAG, "MediaProjection为空，无法获取背景色");
             return;
         }
         
         // 创建ImageReader获取屏幕像素
         android.media.ImageReader imageReader = android.media.ImageReader.newInstance(
-                rect.width(), rect.height(), android.graphics.PixelFormat.RGBA_8888, 1);
+                rect.width(), rect.height(), android.media.ImageFormat.RGBA_8888, 1);
         
         // 创建虚拟显示
         android.hardware.display.VirtualDisplay virtualDisplay = mediaProjection.createVirtualDisplay(
@@ -334,21 +337,21 @@ public class FloatingWindowService extends Service {
                             // 计算平均背景色，而不是只取一个像素
                             int averageColor = calculateAverageColor(bitmap);
                             
-                            Log.d(TAG, "获取到背景色: " + averageColor + ", 位置: (" + centerX + ", " + centerY + ")");
+                            Log.i(TAG, "获取到背景色: " + averageColor + ", 位置: (" + centerX + ", " + centerY + ")");
                             
                             // 计算背景色亮度
                             int luminance = calculateLuminance(averageColor);
-                            Log.d(TAG, "背景色亮度: " + luminance);
+                            Log.i(TAG, "背景色亮度: " + luminance);
                             
                             // 根据亮度调整文字颜色：亮度>128使用黑色文字，否则使用白色文字
-                            // 增加一定的亮度阈值缓冲，避免频繁切换
+                            // 减小亮度阈值缓冲，提高颜色切换的灵敏度
                             int newTextColor;
                             if (currentTextColor == Color.BLACK) {
-                                // 当前是黑色文字，只有当亮度明显变暗时才切换为白色
-                                newTextColor = luminance < 100 ? Color.WHITE : Color.BLACK;
+                                // 当前是黑色文字，当亮度较低时切换为白色
+                                newTextColor = luminance < 120 ? Color.WHITE : Color.BLACK;
                             } else {
-                                // 当前是白色文字，只有当亮度明显变亮时才切换为黑色
-                                newTextColor = luminance > 150 ? Color.BLACK : Color.WHITE;
+                                // 当前是白色文字，当亮度较高时切换为黑色
+                                newTextColor = luminance > 130 ? Color.BLACK : Color.WHITE;
                             }
                             
                             // 优化阴影设置：黑色文字使用淡灰色阴影，白色文字使用深灰色阴影，增强可读性
@@ -364,7 +367,7 @@ public class FloatingWindowService extends Service {
                                 shadowRadius = 1.5f;
                             }
                             
-                            Log.d(TAG, "当前文字颜色: " + currentTextColor + ", 新文字颜色: " + newTextColor + ", 新阴影颜色: " + newShadowColor);
+                            Log.i(TAG, "当前文字颜色: " + currentTextColor + ", 新文字颜色: " + newTextColor + ", 新阴影颜色: " + newShadowColor);
                             
                             // 更新文字颜色和阴影
                             if (newTextColor != currentTextColor) {
@@ -467,9 +470,8 @@ public class FloatingWindowService extends Service {
                 // 清除"正在截图"提示
                 answerTextView.setText("");
             } else {
-                String fullText = getString(R.string.answer_prefix) + answer;
-                // 解析并高亮显示正确选项
-                answerTextView.setText(formatHighlightedText(fullText), TextView.BufferType.SPANNABLE);
+                // 直接使用答案文本，不再添加前缀，因为formatAnswer方法已经包含了完整内容
+                answerTextView.setText(formatHighlightedText(answer), TextView.BufferType.SPANNABLE);
             }
         }
         
@@ -516,10 +518,18 @@ public class FloatingWindowService extends Service {
                 optionEnd = text.length();
             }
             
-            // 设置红色文字颜色（从标签结束到选项结束）
+            // 查找选项标签的起始位置（选项编号，如A. B. 等）
+            int optionStart = text.lastIndexOf("\n", correctStart);
+            if (optionStart == -1) {
+                optionStart = 0; // 如果是第一行，则从字符串开始位置
+            } else {
+                optionStart++; // 跳过换行符
+            }
+            
+            // 设置红色文字颜色（从选项编号开始到选项结束，包括选项编号和内容）
             spannableString.setSpan(
                     new ForegroundColorSpan(Color.RED),
-                    tagEnd,
+                    optionStart,
                     optionEnd,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             );
@@ -527,7 +537,7 @@ public class FloatingWindowService extends Service {
             // 为红色文字添加合适的阴影效果，增强可读性
             spannableString.setSpan(
                     new ShadowSpan(Color.DKGRAY, 1, 1, 2f),
-                    tagEnd,
+                    optionStart,
                     optionEnd,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             );

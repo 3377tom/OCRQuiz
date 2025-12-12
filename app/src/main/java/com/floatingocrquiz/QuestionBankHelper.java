@@ -892,9 +892,12 @@ public class QuestionBankHelper {
      */
     public void addQuestion(Question question) {
         if (question != null) {
-            question.id = questionList.size() + 1;
-            questionList.add(question);
-            Log.d(TAG, "成功添加新问题: " + question.question);
+            // 使用数据库插入，不需要手动设置ID
+            long id = dbHelper.insertQuestion(question);
+            if (id != -1) {
+                question.id = (int) id;
+                Log.d(TAG, "成功添加新问题: " + question.question);
+            }
         }
     }
 

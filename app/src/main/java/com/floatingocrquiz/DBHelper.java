@@ -63,7 +63,7 @@ public class DBHelper extends SQLiteOpenHelper {
      * @param question 题目对象
      * @return 插入的行ID，失败返回-1
      */
-    public long insertQuestion(Question question) {
+    public long insertQuestion(QuestionBankHelper.Question question) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
 
@@ -88,13 +88,13 @@ public class DBHelper extends SQLiteOpenHelper {
      * @param questions 题目列表
      * @return 插入成功的数量
      */
-    public int batchInsertQuestions(List<Question> questions) {
+    public int batchInsertQuestions(List<QuestionBankHelper.Question> questions) {
         SQLiteDatabase db = this.getWritableDatabase();
         int successCount = 0;
 
         try {
             db.beginTransaction();
-            for (Question question : questions) {
+            for (QuestionBankHelper.Question question : questions) {
                 long id = insertQuestion(question);
                 if (id != -1) {
                     successCount++;
@@ -116,15 +116,15 @@ public class DBHelper extends SQLiteOpenHelper {
      * 获取所有题目
      * @return 题目列表
      */
-    public List<Question> getAllQuestions() {
-        List<Question> questions = new ArrayList<>();
+    public List<QuestionBankHelper.Question> getAllQuestions() {
+        List<QuestionBankHelper.Question> questions = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
 
         Cursor cursor = db.query(TABLE_QUESTIONS, null, null, null, null, null, null);
 
         if (cursor.moveToFirst()) {
             do {
-                Question question = cursorToQuestion(cursor);
+                QuestionBankHelper.Question question = cursorToQuestion(cursor);
                 questions.add(question);
             } while (cursor.moveToNext());
         }
@@ -139,9 +139,9 @@ public class DBHelper extends SQLiteOpenHelper {
      * @param id 题目ID
      * @return 题目对象，不存在返回null
      */
-    public Question getQuestionById(int id) {
+    public QuestionBankHelper.Question getQuestionById(int id) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Question question = null;
+        QuestionBankHelper.Question question = null;
 
         Cursor cursor = db.query(
                 TABLE_QUESTIONS,
@@ -167,8 +167,8 @@ public class DBHelper extends SQLiteOpenHelper {
      * @param keyword 搜索关键词
      * @return 匹配的题目列表
      */
-    public List<Question> searchQuestions(String keyword) {
-        List<Question> questions = new ArrayList<>();
+    public List<QuestionBankHelper.Question> searchQuestions(String keyword) {
+        List<QuestionBankHelper.Question> questions = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
 
         String selection = COLUMN_QUESTION + " LIKE ?";
@@ -186,7 +186,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
         if (cursor.moveToFirst()) {
             do {
-                Question question = cursorToQuestion(cursor);
+                QuestionBankHelper.Question question = cursorToQuestion(cursor);
                 questions.add(question);
             } while (cursor.moveToNext());
         }
@@ -230,10 +230,10 @@ public class DBHelper extends SQLiteOpenHelper {
      * @param cursor 查询结果游标
      * @return Question对象
      */
-    private Question cursorToQuestion(Cursor cursor) {
-        Question question = new Question();
+    private QuestionBankHelper.Question cursorToQuestion(Cursor cursor) {
+        QuestionBankHelper.Question question = new QuestionBankHelper.Question();
         question.id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID));
-        question.type = QuestionType.valueOf(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TYPE)));
+        question.type = QuestionBankHelper.QuestionType.valueOf(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TYPE)));
         question.question = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_QUESTION));
         question.answer = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ANSWER));
 

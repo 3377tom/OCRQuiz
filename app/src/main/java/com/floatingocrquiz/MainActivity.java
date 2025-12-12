@@ -85,28 +85,6 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(this, "浮动窗口已停止", Toast.LENGTH_SHORT).show();
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == REQUEST_OVERLAY_PERMISSION) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-                Toast.makeText(this, R.string.overlay_permission_denied, Toast.LENGTH_SHORT).show();
-            }
-        } else if (requestCode == REQUEST_MEDIA_PROJECTION) {
-            // 处理屏幕录制权限结果
-            if (resultCode == RESULT_OK && data != null) {
-                // 将权限结果传递给ScreenCaptureService
-                Intent serviceIntent = new Intent(this, ScreenCaptureService.class);
-                serviceIntent.putExtra(ScreenCaptureService.EXTRA_RESULT_CODE, resultCode);
-                serviceIntent.putExtra(ScreenCaptureService.EXTRA_RESULT_INTENT, data);
-                ContextCompat.startForegroundService(this, serviceIntent);
-            } else {
-                Toast.makeText(this, R.string.media_projection_permission_denied, Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-    
     // 选择JSON文件
     private void selectJsonFile() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
@@ -115,7 +93,6 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(Intent.createChooser(intent, "选择JSON文件"), REQUEST_FILE_SELECT);
     }
 
-    // 处理文件选择结果
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -169,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
         if (importedCount > 0) {
             Toast.makeText(this, String.format(getString(R.string.import_success), importedCount), Toast.LENGTH_SHORT).show();
         } else {
-            Toast.makeText(this, R.string.import_failure, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.import_failed, Toast.LENGTH_SHORT).show();
         }
     }
 

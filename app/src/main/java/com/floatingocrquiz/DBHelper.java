@@ -183,7 +183,8 @@ public class DBHelper extends SQLiteOpenHelper {
         List<QuestionBankHelper.Question> questions = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
 
-        String selection = COLUMN_QUESTION + " LIKE ?";
+        // 添加COLLATE NOCASE以忽略大小写，确保搜索匹配
+        String selection = COLUMN_QUESTION + " LIKE ? COLLATE NOCASE";
         String[] selectionArgs = new String[]{"%" + keyword + "%"};
 
         Cursor cursor = db.query(

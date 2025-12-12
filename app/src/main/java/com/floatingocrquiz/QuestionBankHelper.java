@@ -272,8 +272,16 @@ public class QuestionBankHelper {
         if (pureQuestion.length() > 5) {
             // 提取关键词进行数据库搜索
             String searchKeyword = keywords.isEmpty() ? pureQuestion.substring(0, Math.min(10, pureQuestion.length())) : keywords.get(0);
+            Log.d(TAG, "使用关键词 '" + searchKeyword + "' 进行数据库搜索");
             candidateQuestions = dbHelper.searchQuestions(searchKeyword);
             Log.d(TAG, "数据库搜索到 " + candidateQuestions.size() + " 道候选题目");
+            
+            // 如果搜索结果为空，尝试获取所有题目进行匹配
+            if (candidateQuestions.isEmpty()) {
+                Log.d(TAG, "搜索结果为空，尝试获取所有题目进行匹配");
+                candidateQuestions = dbHelper.getAllQuestions();
+                Log.d(TAG, "获取所有 " + candidateQuestions.size() + " 道题目进行匹配");
+            }
         } else {
             // 对于短文本，直接获取所有题目
             candidateQuestions = dbHelper.getAllQuestions();

@@ -7,6 +7,19 @@
     android:background="@drawable/floating_window_background"
     android:padding="15dp">
 
+    <!-- 关闭按钮 -->
+    <ImageButton
+        android:id="@+id/close_button"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:background="@null"
+        android:src="@drawable/close"
+        android:scaleType="centerInside"
+        android:adjustViewBounds="true"
+        android:padding="2dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <ScrollView
         android:id="@+id/scroll_view"
         android:layout_width="wrap_content"
@@ -14,7 +27,8 @@
         android:maxWidth="300dp"
         android:maxHeight="400dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/button_layout">
         <TextView
             android:id="@+id/answer_text"
             android:layout_width="wrap_content"
@@ -36,6 +50,7 @@
     </ScrollView>
 
     <LinearLayout
+        android:id="@+id/button_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"

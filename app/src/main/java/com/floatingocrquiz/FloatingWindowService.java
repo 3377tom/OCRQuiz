@@ -59,6 +59,7 @@ public class FloatingWindowService extends Service {
     private TextView answerTextView;
     private ImageButton captureButton;
     private ImageButton settingsButton;
+    private ImageButton closeButton;
     
     // 默认截图范围设置
     private static final String PREFS_NAME = "ScreenshotPrefs";
@@ -178,6 +179,7 @@ public class FloatingWindowService extends Service {
         answerTextView = floatingView.findViewById(R.id.answer_text);
         captureButton = floatingView.findViewById(R.id.capture_button);
         settingsButton = floatingView.findViewById(R.id.settings_button);
+        closeButton = floatingView.findViewById(R.id.close_button);
 
         // 设置截图按钮点击事件
         captureButton.setOnClickListener(v -> {
@@ -195,6 +197,16 @@ public class FloatingWindowService extends Service {
             isSettingDefaultRange = true;
             // 启动屏幕捕获功能用于设置默认范围
             startScreenCapture();
+        });
+        
+        // 设置关闭按钮点击事件
+        closeButton.setOnClickListener(v -> {
+            // 移除悬浮窗视图
+            if (windowManager != null && floatingView != null) {
+                windowManager.removeView(floatingView);
+            }
+            // 停止服务
+            stopSelf();
         });
 
         // 设置拖拽功能

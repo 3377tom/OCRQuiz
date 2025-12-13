@@ -107,15 +107,9 @@ public class QuestionBankHelper {
                 
                 // 检查选项长度（转换为JSON字符串后最大250字符）
                 if (isValid && question.options != null) {
-                    try {
-                        JSONArray optionsArray = new JSONArray(question.options);
-                        String optionsJson = optionsArray.toString();
-                        if (optionsJson.length() > 250) {
-                            Log.w(TAG, "题目选项过长 (ID: " + question.id + ", Length: " + optionsJson.length() + ")，已跳过");
-                            isValid = false;
-                        }
-                    } catch (JSONException e) {
-                        Log.e(TAG, "选项转换为JSON失败 (ID: " + question.id + "): " + e.getMessage());
+                    String optionsJson = question.options.toString();
+                    if (optionsJson.length() > 250) {
+                        Log.w(TAG, "题目选项过长 (ID: " + question.id + ", Length: " + optionsJson.length() + ")，已跳过");
                         isValid = false;
                     }
                 }
@@ -1099,15 +1093,9 @@ public class QuestionBankHelper {
             
             // 检查选项长度（转换为JSON字符串后最大250字符）
             if (isValid && question.options != null) {
-                try {
-                    JSONArray optionsArray = new JSONArray(question.options);
-                    String optionsJson = optionsArray.toString();
-                    if (optionsJson.length() > 250) {
-                        Log.w(TAG, "题目选项过长 (Length: " + optionsJson.length() + ")，已跳过");
-                        isValid = false;
-                    }
-                } catch (JSONException e) {
-                    Log.e(TAG, "选项转换为JSON失败: " + e.getMessage());
+                String optionsJson = question.options.toString();
+                if (optionsJson.length() > 250) {
+                    Log.w(TAG, "题目选项过长 (Length: " + optionsJson.length() + ")，已跳过");
                     isValid = false;
                 }
             }

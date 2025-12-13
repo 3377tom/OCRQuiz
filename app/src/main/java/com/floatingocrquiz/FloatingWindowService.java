@@ -531,7 +531,8 @@ public class FloatingWindowService extends Service {
         // 查找所有[CORRECT]标签，不再使用闭标签
         int startIndex = 0;
         while (startIndex < spannableStringBuilder.length()) {
-            int correctStart = spannableStringBuilder.indexOf("[CORRECT]", startIndex);
+            String tempString = spannableStringBuilder.toString();
+            int correctStart = tempString.indexOf("[CORRECT]", startIndex);
             if (correctStart == -1) {
                 break;
             }
@@ -540,13 +541,15 @@ public class FloatingWindowService extends Service {
             int tagEnd = correctStart + "[CORRECT]".length();
             
             // 查找当前选项的结束位置（换行符或字符串结束）
-            int optionEnd = spannableStringBuilder.indexOf("\n", tagEnd);
+            tempString = spannableStringBuilder.toString();
+            int optionEnd = tempString.indexOf("\n", tagEnd);
             if (optionEnd == -1) {
                 optionEnd = spannableStringBuilder.length();
             }
             
             // 查找选项标签的起始位置（选项编号，如A. B. 等）
-            int optionStart = spannableStringBuilder.lastIndexOf("\n", correctStart);
+            tempString = spannableStringBuilder.toString();
+            int optionStart = tempString.lastIndexOf("\n", correctStart);
             if (optionStart == -1) {
                 optionStart = 0; // 如果是第一行，则从字符串开始位置
             } else {

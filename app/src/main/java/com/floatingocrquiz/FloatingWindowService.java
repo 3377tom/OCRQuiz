@@ -213,6 +213,15 @@ public class FloatingWindowService extends Service {
         View.OnTouchListener touchListener = new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                // 检查是否点击了关闭按钮，如果是，则不处理拖拽事件
+                if (closeButton != null) {
+                    Rect closeButtonRect = new Rect();
+                    closeButton.getGlobalVisibleRect(closeButtonRect);
+                    if (closeButtonRect.contains((int) event.getRawX(), (int) event.getRawY())) {
+                        return false; // 不拦截事件，让关闭按钮处理点击
+                    }
+                }
+                
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         // 获取初始位置和触摸点

@@ -10,13 +10,17 @@
     <!-- 关闭按钮 -->
     <ImageButton
         android:id="@+id/close_button"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:background="@null"
         android:src="@drawable/close"
         android:scaleType="centerInside"
         android:adjustViewBounds="true"
         android:padding="2dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="8dp"
+        android:clickable="true"
+        android:focusable="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -26,6 +30,7 @@
         android:layout_height="wrap_content"
         android:maxWidth="300dp"
         android:maxHeight="400dp"
+        android:layout_marginTop="25dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/button_layout">

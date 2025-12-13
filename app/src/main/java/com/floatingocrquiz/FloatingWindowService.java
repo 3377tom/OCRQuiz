@@ -196,7 +196,7 @@ public class FloatingWindowService extends Service {
         });
 
         // 设置拖拽功能
-        floatingView.findViewById(R.id.floating_window_container).setOnTouchListener(new View.OnTouchListener() {
+        View.OnTouchListener touchListener = new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction()) {
@@ -243,6 +243,19 @@ public class FloatingWindowService extends Service {
                     default:
                         return false;
                 }
+            }
+        };
+        
+        // 为整个悬浮窗容器设置触摸事件监听器
+        floatingView.findViewById(R.id.floating_window_container).setOnTouchListener(touchListener);
+        
+        // 为ScrollView设置触摸事件监听器，将事件传递给父容器
+        ScrollView scrollView = floatingView.findViewById(R.id.scroll_view);
+        scrollView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                // 将触摸事件传递给父容器的触摸事件监听器
+                return touchListener.onTouch(v, event);
             }
         });
 
@@ -511,12 +524,12 @@ public class FloatingWindowService extends Service {
      * 解析带有高亮标记的文本，将正确选项显示为红色
      */
     private SpannableString formatHighlightedText(String text) {
-        SpannableString spannableString = new SpannableString(text);
+        SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(text);
         
         // 查找所有[CORRECT]标签，不再使用闭标签
         int startIndex = 0;
-        while (startIndex < text.length()) {
-            int correctStart = text.indexOf("[CORRECT]", startIndex);
+        while (startIndex < spannableStringBuilder.length()) {
+            int correctStart = spannableStringBuilder.indexOf("[CORRECT]", startIndex);
             if (correctStart == -1) {
                 break;
             }
@@ -525,21 +538,27 @@ public class FloatingWindowService extends Service {
             int tagEnd = correctStart + "[CORRECT]".length();
             
             // 查找当前选项的结束位置（换行符或字符串结束）
-            int optionEnd = text.indexOf("\n", tagEnd);
+            int optionEnd = spannableStringBuilder.indexOf("\n", tagEnd);
             if (optionEnd == -1) {
-                optionEnd = text.length();
+                optionEnd = spannableStringBuilder.length();
             }
             
             // 查找选项标签的起始位置（选项编号，如A. B. 等）
-            int optionStart = text.lastIndexOf("\n", correctStart);
+            int optionStart = spannableStringBuilder.lastIndexOf("\n", correctStart);
             if (optionStart == -1) {
                 optionStart = 0; // 如果是第一行，则从字符串开始位置
             } else {
                 optionStart++; // 跳过换行符
             }
             
+            // 真正删除[CORRECT]标签文本，而不是仅仅设置为透明
+            spannableStringBuilder.delete(correctStart, tagEnd);
+            
+            // 调整选项结束位置，因为我们删除了[CORRECT]标签
+            optionEnd -= (tagEnd - correctStart);
+            
             // 设置红色文字颜色（从选项编号开始到选项结束，包括选项编号和内容）
-            spannableString.setSpan(
+            spannableStringBuilder.setSpan(
                     new ForegroundColorSpan(Color.RED),
                     optionStart,
                     optionEnd,
@@ -547,26 +566,18 @@ public class FloatingWindowService extends Service {
             );
             
             // 为红色文字添加合适的阴影效果，增强可读性
-            spannableString.setSpan(
+            spannableStringBuilder.setSpan(
                     new ShadowSpan(Color.DKGRAY, 1, 1, 2f),
                     optionStart,
                     optionEnd,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             );
             
-            // 删除[CORRECT]标签文本
-            spannableString.setSpan(
-                    new ForegroundColorSpan(Color.TRANSPARENT),
-                    correctStart,
-                    tagEnd,
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            );
-            
-            // 继续查找下一个标签
+            // 继续查找下一个标签，由于删除了标签，需要调整startIndex
             startIndex = optionEnd;
         }
         
-        return spannableString;
+        return new SpannableString(spannableStringBuilder);
     }
     
     /**

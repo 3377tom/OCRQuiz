@@ -7,26 +7,30 @@
     android:background="@drawable/floating_window_background"
     android:padding="15dp">
 
-    <TextView
-        android:id="@+id/answer_text"
+    <ScrollView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:maxWidth="300dp"
         android:maxHeight="400dp"
-        android:ellipsize="end"
-        android:maxLines="10"
-        android:lineSpacingExtra="1dp"
-        android:text="@string/wait_recognition"
-        android:textColor="@color/white"
-        android:textSize="12sp"
-        android:textStyle="bold"
-        android:shadowColor="@color/black"
-        android:shadowDx="1"
-        android:shadowDy="1"
-        android:shadowRadius="2"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+        <TextView
+            android:id="@+id/answer_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="30"
+            android:lineSpacingExtra="1dp"
+            android:text="@string/wait_recognition"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:gravity="left"
+            android:shadowColor="@color/black"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="2" />
+    </ScrollView>
 
     <LinearLayout
         android:layout_width="wrap_content"

@@ -18,7 +18,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     private static final String TAG = "com.floatingocrquiz.DBHelper";
     private static final String DATABASE_NAME = "question_bank.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 3;
 
     // 表名
     public static final String TABLE_QUESTIONS = "questions";
@@ -34,9 +34,9 @@ public class DBHelper extends SQLiteOpenHelper {
     private static final String CREATE_TABLE_QUESTIONS = "CREATE TABLE " + TABLE_QUESTIONS + "(" +
             COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
             COLUMN_TYPE + " TEXT NOT NULL, " +
-            COLUMN_QUESTION + " TEXT NOT NULL, " +
-            COLUMN_OPTIONS + " TEXT, " +
-            COLUMN_ANSWER + " TEXT NOT NULL" +
+            COLUMN_QUESTION + " TEXT NOT NULL CHECK(length(question) <= 600), " +
+            COLUMN_OPTIONS + " TEXT CHECK(length(options) <= 250), " +
+            COLUMN_ANSWER + " TEXT NOT NULL CHECK(length(answer) <= 1000)" +
             ");";
 
     public DBHelper(Context context) {
@@ -47,7 +47,9 @@ public class DBHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         // 创建表
         db.execSQL(CREATE_TABLE_QUESTIONS);
-        Log.d(TAG, "数据库表创建成功");
+        // 为question字段创建索引，提高模糊搜索效率
+        db.execSQL("CREATE INDEX idx_questions_question ON " + TABLE_QUESTIONS + "(" + COLUMN_QUESTION + ");");
+        Log.d(TAG, "数据库表和索引创建成功");
     }
 
     @Override

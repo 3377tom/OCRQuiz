@@ -95,7 +95,40 @@ public class QuestionBankHelper {
                 }
                 
                 question.answer = questionObj.getString("answer");
-                tempQuestions.add(question);
+                
+                // 输入验证：检查内容长度
+                boolean isValid = true;
+                
+                // 检查题干长度（最大600字符）
+                if (question.question != null && question.question.length() > 600) {
+                    Log.w(TAG, "题目题干过长 (ID: " + question.id + ", Length: " + question.question.length() + ")，已跳过");
+                    isValid = false;
+                }
+                
+                // 检查选项长度（转换为JSON字符串后最大250字符）
+                if (isValid && question.options != null) {
+                    try {
+                        JSONArray optionsArray = new JSONArray(question.options);
+                        String optionsJson = optionsArray.toString();
+                        if (optionsJson.length() > 250) {
+                            Log.w(TAG, "题目选项过长 (ID: " + question.id + ", Length: " + optionsJson.length() + ")，已跳过");
+                            isValid = false;
+                        }
+                    } catch (JSONException e) {
+                        Log.w(TAG, "选项JSON解析失败 (ID: " + question.id + ")，已跳过: " + e.getMessage());
+                        isValid = false;
+                    }
+                }
+                
+                // 检查答案长度（最大1000字符）
+                if (isValid && question.answer != null && question.answer.length() > 1000) {
+                    Log.w(TAG, "题目答案过长 (ID: " + question.id + ", Length: " + question.answer.length() + ")，已跳过");
+                    isValid = false;
+                }
+                
+                if (isValid) {
+                    tempQuestions.add(question);
+                }
             }
             
             // 批量插入到数据库
@@ -213,45 +246,58 @@ public class QuestionBankHelper {
 
     /**
      * 提取关键词
-     * 针对不同题型调整停用词策略，特别是判断题保留关键语义词
+     * 提取核心实词，支持按长度和停用词过滤
      */
     private List<String> extractKeywords(String text) {
         List<String> keywords = new ArrayList<>();
         
-        // 简单的关键词提取
-        String[] words = text.split(" ");
+        // 扩展停用词列表
+        Set<String> stopWords = new HashSet<>(Arrays.asList(
+            "的", "了", "在",  "等", "以下", "哪些", "哪个", 
+            "包括", "依据", "根据", "按照", "关于", "对", "的话", "是", "有", 
+            "这", "那", "为", "以", "之", "来", "去", "也", "又", "还", "都", 
+            "则", "而",  "就", "但", "却", "并", "且", "及", "于", "由", 
+            "至", "从", "向", "到", "被", "把", "将", "让", "使", "令", "给",
+            "吗", "呢", "吧", "啊", "呀", "啦", "唉", "哦"
+        ));
         
-        // 基础停用词列表（不包含会影响语义的词）
-        String[] baseStopWords = {
-            "的", "了", "在", "和", "与", "等", "以下", "哪些", "哪个", 
-            "包括", "依据", "根据", "按照", "关于", "对", "的话"
-        };
+        // 语义关键的词列表（需要保留）
+        Set<String> semanticWords = new HashSet<>(Arrays.asList(
+            "不是", "必须", "应当", "应该", "能够", "需要", "可以", "禁止", 
+            "不得", "允许"
+        ));
         
-        // 可能影响语义的词列表（在特定题型中需要保留）
-        String[] semanticWords = {
-            "不是", "必须", "应当", "应该", "能够", "需要", "可以"
-        };
+        // 中文分词处理（简单的基于标点和空格的分词）
+        // 首先将文本分割为句子
+        String[] sentences = text.split("[。，；？！、]");
         
-        for (String word : words) {
-            boolean isStopWord = false;
+        for (String sentence : sentences) {
+            // 进一步分割为词语（基于空格、数字、字母等）
+            String[] tokens = sentence.split("[^\u4e00-\u9fa5a-zA-Z]+");
             
-            // 检查是否为基础停用词
-            for (String stopWord : baseStopWords) {
-                if (word.equals(stopWord)) {
-                    isStopWord = true;
-                    break;
+            for (String token : tokens) {
+                // 清理空字符串
+                token = token.trim();
+                if (token.isEmpty()) {
+                    continue;
                 }
-            }
-            
-            // 不将语义关键的词作为停用词
-            if (!isStopWord && word.length() > 1) {
-                keywords.add(word);
+                
+                // 跳过停用词，但保留语义关键词
+                if (!semanticWords.contains(token) && stopWords.contains(token)) {
+                    continue;
+                }
+                
+                // 只保留长度超过3个字符的实词
+                if (token.length() > 3) {
+                    keywords.add(token);
+                }
             }
         }
         
-        // 如果没有提取到关键词，返回文本本身作为关键词
-        if (keywords.isEmpty()) {
-            keywords.add(text);
+        // 如果没有提取到足够的关键词，尝试使用原始文本的一部分
+        if (keywords.isEmpty() && text.length() > 5) {
+            // 提取文本的前几个字符作为关键词
+            keywords.add(text.substring(0, Math.min(8, text.length())));
         }
         
         return keywords;
@@ -266,24 +312,90 @@ public class QuestionBankHelper {
         
         // 先从OCR文本中提取纯问题内容
         String pureQuestion = extractPureQuestionContent(cleanedOCRText);
+        Log.d(TAG, "提取的纯问题内容: " + pureQuestion);
+        
+        // 优化关键词提取
+        List<String> coreKeywords = new ArrayList<>();
+        if (keywords.size() > 0) {
+            // 过滤出长度超过3个字符的关键词
+            for (String keyword : keywords) {
+                if (keyword.length() > 3) {
+                    coreKeywords.add(keyword);
+                }
+            }
+            
+            // 如果核心关键词不足3个，从纯问题中提取更多
+            if (coreKeywords.size() < 3) {
+                List<String> additionalKeywords = extractKeywords(pureQuestion);
+                for (String keyword : additionalKeywords) {
+                    if (keyword.length() > 3 && !coreKeywords.contains(keyword)) {
+                        coreKeywords.add(keyword);
+                        if (coreKeywords.size() >= 10) {
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            Log.d(TAG, "核心关键词列表: " + coreKeywords);
+        }
         
         // 使用数据库模糊搜索缩小范围，提高效率
-        List<Question> candidateQuestions;
-        if (pureQuestion.length() > 5) {
-            // 提取关键词进行数据库搜索
-            String searchKeyword = keywords.isEmpty() ? pureQuestion.substring(0, Math.min(10, pureQuestion.length())) : keywords.get(0);
-            Log.d(TAG, "使用关键词 '" + searchKeyword + "' 进行数据库搜索");
-            candidateQuestions = dbHelper.searchQuestions(searchKeyword);
-            Log.d(TAG, "数据库搜索到 " + candidateQuestions.size() + " 道候选题目");
+        List<Question> candidateQuestions = new ArrayList<>();
+        
+        // 步骤1: 使用多关键词进行数据库粗筛
+        if (pureQuestion.length() > 5 && !coreKeywords.isEmpty()) {
+            // 随机选择3-5个关键词（最多使用前10个中的关键词）
+            List<String> selectedKeywords = new ArrayList<>();
+            int maxKeywordsToUse = Math.min(10, coreKeywords.size());
+            int numKeywords = Math.max(3, Math.min(5, maxKeywordsToUse));
             
-            // 如果搜索结果为空，尝试获取所有题目进行匹配
-            if (candidateQuestions.isEmpty()) {
-                Log.d(TAG, "搜索结果为空，尝试获取所有题目进行匹配");
-                candidateQuestions = dbHelper.getAllQuestions();
-                Log.d(TAG, "获取所有 " + candidateQuestions.size() + " 道题目进行匹配");
+            // 随机选择3-5个关键词
+            // 首先获取前10个关键词作为候选池
+            List<String> keywordPool = new ArrayList<>();
+            for (int i = 0; i < Math.min(10, coreKeywords.size()); i++) {
+                keywordPool.add(coreKeywords.get(i));
             }
-        } else {
-            // 对于短文本，直接获取所有题目
+            
+            // 随机打乱候选池
+            java.util.Collections.shuffle(keywordPool);
+            
+            // 选择前numKeywords个关键词
+            for (int i = 0; i < Math.min(numKeywords, keywordPool.size()); i++) {
+                selectedKeywords.add(keywordPool.get(i));
+            }
+            
+            Log.d(TAG, "选择的搜索关键词: " + selectedKeywords);
+            
+            // 使用多关键词进行数据库搜索
+            for (String keyword : selectedKeywords) {
+                List<Question> temp = dbHelper.searchQuestions(keyword);
+                // 合并结果，去重
+                for (Question q : temp) {
+                    if (!candidateQuestions.contains(q)) {
+                        candidateQuestions.add(q);
+                    }
+                }
+                
+                // 如果已经找到足够多的候选题目，可以提前停止
+                if (candidateQuestions.size() > 100) {
+                    break;
+                }
+            }
+            
+            Log.d(TAG, "多关键词搜索到 " + candidateQuestions.size() + " 道候选题目");
+            
+            // 步骤2: 如果多关键词搜索结果为空，尝试单关键词搜索
+            if (candidateQuestions.isEmpty() && !coreKeywords.isEmpty()) {
+                Log.d(TAG, "多关键词搜索结果为空，尝试使用第一个关键词搜索");
+                candidateQuestions = dbHelper.searchQuestions(coreKeywords.get(0));
+                Log.d(TAG, "单关键词搜索到 " + candidateQuestions.size() + " 道候选题目");
+            }
+        }
+        
+        // 步骤3: 兜底，如果搜索结果为空，获取所有题目
+        if (candidateQuestions.isEmpty()) {
+            Log.d(TAG, "搜索结果为空，获取所有题目进行匹配");
             candidateQuestions = dbHelper.getAllQuestions();
             Log.d(TAG, "获取所有 " + candidateQuestions.size() + " 道题目进行匹配");
         }
@@ -686,7 +798,8 @@ public class QuestionBankHelper {
         sb.append("问题: " + compressedQuestion + "\n");
         
         // 添加选项（如果有）
-        if (question.options != null && !question.options.isEmpty()) {
+        if (question.options != null && !question.options.isEmpty() && 
+            question.type != QuestionType.SHORT) { // 简答题不显示选项
             sb.append("选项:\n");
             
             // 获取按OCR选项顺序匹配后的题库选项顺序
@@ -712,7 +825,7 @@ public class QuestionBankHelper {
         
         if (question.type == QuestionType.TRUE_FALSE) {
             // 判断题显示完整答案
-            sb.append(question.answer.equals("TRUE") ? "正确" : "错误");
+            sb.append(question.answer.equals("TRUE") ? "✅" : "❌");
         } else if (question.type == QuestionType.SHORT) {
             // 简答题显示完整答案
             sb.append(question.answer);
@@ -902,10 +1015,68 @@ public class QuestionBankHelper {
             String bankOption = bankOptions.get(i);
             // 使用相似度匹配，提高对OCR误差的容忍度
             if (calculateSimilarity(cleanOCRText(option), cleanOCRText(bankOption), new ArrayList<>()) > 0.9) {
-                // 将原始索引转换为选项标签（A, B, C...）
-                char optionLabel = (char) ('A' + i);
-                // 检查该选项标签是否包含在答案中
-                return answer.indexOf(optionLabel) != -1;
+                // 对于判断题，特殊处理：直接比较选项内容与答案的对应关系
+                if (answer.equalsIgnoreCase("TRUE") || answer.equalsIgnoreCase("FALSE")) {
+                    // 判断题答案格式为TRUE/FALSE，检查选项内容
+                    String cleanedOption = cleanOCRText(option);
+                    
+                    // 判断选项内容对应的正确答案
+                    boolean shouldBeTrue = cleanedOption.contains("正确") || 
+                                          cleanedOption.equalsIgnoreCase("正确") || 
+                                          cleanedOption.contains("对") ||
+                                          cleanedOption.equalsIgnoreCase("对") ||
+                                          cleanedOption.contains("真") ||
+                                          cleanedOption.equalsIgnoreCase("真") ||
+                                          cleanedOption.contains("是") ||
+                                          cleanedOption.equalsIgnoreCase("是") ||
+                                          cleanedOption.contains("√") ||
+                                          cleanedOption.contains("✓") ||
+                                          cleanedOption.contains("✔") ||
+                                          cleanedOption.contains("✅") ||
+                                          cleanedOption.contains("🌕") ||
+                                          cleanedOption.contains("✓") ||
+                                          cleanedOption.contains("T") ||
+                                          cleanedOption.equalsIgnoreCase("T") ||
+                                          cleanedOption.contains("Yes") ||
+                                          cleanedOption.equalsIgnoreCase("Yes") ||
+                                          cleanedOption.contains("Y") ||
+                                          cleanedOption.equalsIgnoreCase("Y");
+                    
+                    boolean shouldBeFalse = cleanedOption.contains("错误") || 
+                                           cleanedOption.equalsIgnoreCase("错误") || 
+                                           cleanedOption.contains("错") ||
+                                           cleanedOption.equalsIgnoreCase("错") ||
+                                           cleanedOption.contains("假") ||
+                                           cleanedOption.equalsIgnoreCase("假") ||
+                                           cleanedOption.contains("否") ||
+                                           cleanedOption.equalsIgnoreCase("否") ||
+                                           cleanedOption.contains("×") ||
+                                           cleanedOption.contains("✗") ||
+                                           cleanedOption.contains("✕") ||
+                                           cleanedOption.contains("✖") ||
+                                           cleanedOption.contains("❌") ||
+                                           cleanedOption.contains("🌑") ||
+                                           cleanedOption.contains("✗") ||
+                                           cleanedOption.contains("F") ||
+                                           cleanedOption.equalsIgnoreCase("F") ||
+                                           cleanedOption.contains("No") ||
+                                           cleanedOption.equalsIgnoreCase("No") ||
+                                           cleanedOption.contains("N") ||
+                                           cleanedOption.equalsIgnoreCase("N");
+                    
+                    // 根据答案内容判断选项是否正确
+                    if (answer.equalsIgnoreCase("TRUE")) {
+                        return shouldBeTrue;
+                    } else if (answer.equalsIgnoreCase("FALSE")) {
+                        return shouldBeFalse;
+                    }
+                    return false;
+                } else {
+                    // 选择题：将原始索引转换为选项标签（A, B, C...）
+                    char optionLabel = (char) ('A' + i);
+                    // 检查该选项标签是否包含在答案中
+                    return answer.indexOf(optionLabel) != -1;
+                }
             }
         }
         
@@ -917,11 +1088,43 @@ public class QuestionBankHelper {
      */
     public void addQuestion(Question question) {
         if (question != null) {
-            // 使用数据库插入，不需要手动设置ID
-            long id = dbHelper.insertQuestion(question);
-            if (id != -1) {
-                question.id = (int) id;
-                Log.d(TAG, "成功添加新问题: " + question.question);
+            // 输入验证：检查内容长度
+            boolean isValid = true;
+            
+            // 检查题干长度（最大600字符）
+            if (question.question != null && question.question.length() > 600) {
+                Log.w(TAG, "题目题干过长 (Length: " + question.question.length() + ")，已跳过");
+                isValid = false;
+            }
+            
+            // 检查选项长度（转换为JSON字符串后最大250字符）
+            if (isValid && question.options != null) {
+                try {
+                    JSONArray optionsArray = new JSONArray(question.options);
+                    String optionsJson = optionsArray.toString();
+                    if (optionsJson.length() > 250) {
+                        Log.w(TAG, "题目选项过长 (Length: " + optionsJson.length() + ")，已跳过");
+                        isValid = false;
+                    }
+                } catch (JSONException e) {
+                    Log.w(TAG, "选项JSON解析失败，已跳过: " + e.getMessage());
+                    isValid = false;
+                }
+            }
+            
+            // 检查答案长度（最大1000字符）
+            if (isValid && question.answer != null && question.answer.length() > 1000) {
+                Log.w(TAG, "题目答案过长 (Length: " + question.answer.length() + ")，已跳过");
+                isValid = false;
+            }
+            
+            if (isValid) {
+                // 使用数据库插入，不需要手动设置ID
+                long id = dbHelper.insertQuestion(question);
+                if (id != -1) {
+                    question.id = (int) id;
+                    Log.d(TAG, "成功添加新问题: " + question.question);
+                }
             }
         }
     }

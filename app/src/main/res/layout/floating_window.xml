@@ -27,6 +27,8 @@
             android:textSize="12sp"
             android:textStyle="bold"
             android:gravity="left"
+            android:layout_gravity="left"
+            android:textAlignment="viewStart"
             android:shadowColor="@color/black"
             android:shadowDx="1"
             android:shadowDy="1"

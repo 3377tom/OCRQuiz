@@ -2,8 +2,8 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- 圆角矩形 -->
     <corners android:radius="10dp" />
-    <!-- 半透明背景 -->
-    <solid android:color="#CC000000" />
+    <!-- 半透明背景，增强透明度 -->
+    <solid android:color="#80000000" />
     <!-- 绿色边框 -->
     <stroke
         android:width="2dp"

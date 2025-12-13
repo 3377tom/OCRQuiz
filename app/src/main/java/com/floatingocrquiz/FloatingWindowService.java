@@ -168,7 +168,8 @@ public class FloatingWindowService extends Service {
         layoutParams.y = 200;
         
         // 设置窗口透明度（0.0-完全透明，1.0-完全不透明）
-        layoutParams.alpha = 0.8f;
+        // 窗口透明度由背景drawable控制，这里设置为完全不透明
+        layoutParams.alpha = 1.0f;
 
         // 加载浮动窗口布局
         floatingView = LayoutInflater.from(this).inflate(R.layout.floating_window, null);
@@ -200,6 +201,7 @@ public class FloatingWindowService extends Service {
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
+                        // 获取初始位置和触摸点
                         initialX = layoutParams.x;
                         initialY = layoutParams.y;
                         initialTouchX = event.getRawX();
@@ -207,10 +209,15 @@ public class FloatingWindowService extends Service {
                         return true;
 
                     case MotionEvent.ACTION_MOVE:
+                        // 计算移动距离
                         int dx = (int) (event.getRawX() - initialTouchX);
                         int dy = (int) (event.getRawY() - initialTouchY);
+                        
+                        // 更新窗口位置
                         layoutParams.x = initialX + dx;
                         layoutParams.y = initialY + dy;
+                        
+                        // 立即更新窗口布局
                         windowManager.updateViewLayout(floatingView, layoutParams);
                         return true;
                     
@@ -318,11 +325,14 @@ public class FloatingWindowService extends Service {
         ImageReader imageReader = ImageReader.newInstance(
                         rect.width(), rect.height(), android.graphics.PixelFormat.RGBA_8888, 1);
         
-        // 创建虚拟显示
+        // 创建虚拟显示，使用VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY标志确保只获取背景内容，不包括悬浮窗本身
+        int flags = android.hardware.display.DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR 
+                | android.hardware.display.DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY;
+        
         android.hardware.display.VirtualDisplay virtualDisplay = mediaProjection.createVirtualDisplay(
                 "BackgroundCapture",
                 rect.width(), rect.height(), 160,
-                android.hardware.display.DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                flags,
                 imageReader.getSurface(), null, null);
         
         // 设置ImageAvailableListener，当有图像可用时处理

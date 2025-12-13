@@ -65,7 +65,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:justifyContent="space-between"
+                android:weightSum="2"
                 android:layout_marginBottom="16dp">
 
                 <Button
@@ -110,7 +110,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:justifyContent="space-between">
+                android:weightSum="2">
 
                 <Button
                     android:id="@+id/import_button"

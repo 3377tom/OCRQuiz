@@ -28,6 +28,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageButton;
+import android.widget.ScrollView;
+import android.text.SpannableStringBuilder;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.text.SpannableString;

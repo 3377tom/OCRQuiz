@@ -160,7 +160,7 @@
                         android:layout_height="wrap_content"
                         android:text="导入题库"
                         android:textSize="14sp"
-                        android:textColor="@android:color/blue"
+                        android:textColor="@color/purple_200"
                         android:textStyle="bold" />
                 </LinearLayout>
 
@@ -193,7 +193,7 @@
                         android:layout_height="wrap_content"
                         android:text="清空题库"
                         android:textSize="14sp"
-                        android:textColor="@android:color/blue"
+                        android:textColor="@color/purple_200"
                         android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>

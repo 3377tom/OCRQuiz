@@ -8,6 +8,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
@@ -152,6 +153,11 @@ public class FloatingWindowService extends Service {
         
         windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
 
+        // 从SharedPreferences加载设置
+        SharedPreferences sharedPreferences = getSharedPreferences("app_settings", MODE_PRIVATE);
+        int opacity = sharedPreferences.getInt("window_opacity", 80); // 默认80%
+        int fontSizeLevel = sharedPreferences.getInt("font_size", 2); // 默认中等大小
+
         // 创建浮动窗口布局参数
         layoutParams = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
@@ -171,8 +177,7 @@ public class FloatingWindowService extends Service {
         layoutParams.y = 200;
         
         // 设置窗口透明度（0.0-完全透明，1.0-完全不透明）
-        // 窗口透明度由背景drawable控制，这里设置为完全不透明
-        layoutParams.alpha = 1.0f;
+        layoutParams.alpha = opacity / 100.0f;
 
         // 加载浮动窗口布局
         floatingView = LayoutInflater.from(this).inflate(R.layout.floating_window, null);
@@ -180,6 +185,27 @@ public class FloatingWindowService extends Service {
         captureButton = floatingView.findViewById(R.id.capture_button);
         settingsButton = floatingView.findViewById(R.id.settings_button);
         closeButton = floatingView.findViewById(R.id.close_button);
+
+        // 根据字体大小设置文本大小
+        int textSize = 14; // 默认大小
+        switch (fontSizeLevel) {
+            case 0:
+                textSize = 10; // 最小
+                break;
+            case 1:
+                textSize = 12; // 小
+                break;
+            case 2:
+                textSize = 14; // 中
+                break;
+            case 3:
+                textSize = 16; // 大
+                break;
+            case 4:
+                textSize = 18; // 最大
+                break;
+        }
+        answerTextView.setTextSize(textSize);
 
         // 设置截图按钮点击事件
         captureButton.setOnClickListener(v -> {

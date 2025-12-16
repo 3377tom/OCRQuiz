@@ -1,10 +1,18 @@
 package com.floatingocrquiz;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.widget.SeekBar;
+import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 public class SettingsActivity extends AppCompatActivity {
+
+    private SeekBar opacitySeekBar;
+    private TextView opacityValue;
+    private SeekBar fontSizeSeekBar;
+    private SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,5 +30,60 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         toolbar.setNavigationOnClickListener(v -> onBackPressed());
+
+        // 初始化SharedPreferences
+        sharedPreferences = getSharedPreferences("app_settings", MODE_PRIVATE);
+
+        // 初始化透明度设置
+        opacitySeekBar = findViewById(R.id.opacity_seekbar);
+        opacityValue = findViewById(R.id.opacity_value);
+
+        // 从SharedPreferences加载保存的透明度值
+        int savedOpacity = sharedPreferences.getInt("window_opacity", 80);
+        opacitySeekBar.setProgress(savedOpacity);
+        opacityValue.setText(savedOpacity + "%");
+
+        // 设置透明度SeekBar的监听事件
+        opacitySeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                // 更新透明度显示值
+                opacityValue.setText(progress + "%");
+                // 保存透明度设置
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putInt("window_opacity", progress);
+                editor.apply();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        // 初始化字体大小设置
+        fontSizeSeekBar = findViewById(R.id.font_size_seekbar);
+
+        // 从SharedPreferences加载保存的字体大小值（0-4对应小到大）
+        int savedFontSize = sharedPreferences.getInt("font_size", 2); // 默认中等大小
+        fontSizeSeekBar.setProgress(savedFontSize);
+
+        // 设置字体大小SeekBar的监听事件
+        fontSizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                // 保存字体大小设置
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putInt("font_size", progress);
+                editor.apply();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
     }
 }

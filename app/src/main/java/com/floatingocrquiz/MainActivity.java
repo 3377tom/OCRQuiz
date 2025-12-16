@@ -12,6 +12,7 @@ import android.provider.Settings;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.view.LayoutInflater;
@@ -29,9 +30,9 @@ public class MainActivity extends AppCompatActivity {
 
     private Button startButton;
     private Button stopButton;
-    private Button importButton;
-    private Button deleteAllButton;
-    private Button settingsButton;
+    private ImageButton importButton;
+    private ImageButton deleteAllButton;
+    private ImageButton settingsButton;
     private QuestionBankHelper questionBankHelper;
     private View customToastView;
     private ViewGroup customToastWindowManager;

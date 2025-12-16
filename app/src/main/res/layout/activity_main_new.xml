@@ -13,27 +13,45 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         android:gravity="center"
         android:layout_marginTop="32dp"
         android:layout_marginBottom="32dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="浮动答题助手"
-            android:textSize="28sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/white"
-            android:layout_marginBottom="8dp" />
+        <!-- 设置按钮 -->
+        <ImageButton
+            android:id="@+id/settings_button"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/setting"
+            android:background="@null"
+            android:tint="@android:color/white"
+            android:layout_marginRight="16dp"
+            android:layout_gravity="center_vertical"
+            android:contentDescription="设置" />
 
-        <TextView
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="智能识别，快速答题"
-            android:textSize="16sp"
-            android:textColor="@android:color/white"
-            android:alpha="0.9" />
+            android:orientation="vertical"
+            android:gravity="center">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="忙答之"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:textColor="@android:color/white"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="智能识别，快速答题"
+                android:textSize="16sp"
+                android:textColor="@android:color/white"
+                android:alpha="0.9" />
+        </LinearLayout>
     </LinearLayout>
 
     <!-- 主要功能卡片 -->
@@ -88,7 +106,7 @@
                     android:layout_weight="1"
                     android:text="停止悬浮窗"
                     android:textSize="16sp"
-                    android:textColor="@color/purple_700"
+                    android:textColor="@android:color/white"
                     android:background="@drawable/button_secondary"
                     android:layout_marginLeft="8dp"
                     android:elevation="2dp"
@@ -110,33 +128,66 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:weightSum="2">
+                android:weightSum="2"
+                android:gravity="center">
 
-                <Button
-                    android:id="@+id/import_button"
+                <!-- 导入按钮 -->
+                <LinearLayout
                     android:layout_width="0dp"
-                    android:layout_height="48dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="导入题库"
-                    android:textSize="16sp"
-                    android:textColor="@android:color/white"
-                    android:background="@drawable/button_primary"
-                    android:layout_marginRight="8dp"
-                    android:elevation="2dp"
-                    android:stateListAnimator="@null" />
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:layout_marginRight="8dp">
+                    
+                    <ImageButton
+                        android:id="@+id/import_button"
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"
+                        android:src="@drawable/import"
+                        android:background="@drawable/button_primary"
+                        android:layout_marginBottom="8dp"
+                        android:elevation="2dp"
+                        android:stateListAnimator="@null"
+                        android:contentDescription="导入题库" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="导入题库"
+                        android:textSize="14sp"
+                        android:textColor="@android:color/white"
+                        android:textStyle="bold" />
+                </LinearLayout>
 
-                <Button
-                    android:id="@+id/delete_all_button"
+                <!-- 删除按钮 -->
+                <LinearLayout
                     android:layout_width="0dp"
-                    android:layout_height="48dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="清空题库"
-                    android:textSize="16sp"
-                    android:textColor="@color/purple_700"
-                    android:background="@drawable/button_secondary"
-                    android:layout_marginLeft="8dp"
-                    android:elevation="2dp"
-                    android:stateListAnimator="@null" />
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:layout_marginLeft="8dp">
+                    
+                    <ImageButton
+                        android:id="@+id/delete_all_button"
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"
+                        android:src="@drawable/delete"
+                        android:background="@drawable/button_secondary"
+                        android:layout_marginBottom="8dp"
+                        android:elevation="2dp"
+                        android:stateListAnimator="@null"
+                        android:contentDescription="清空题库" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="清空题库"
+                        android:textSize="14sp"
+                        android:textColor="@android:color/white"
+                        android:textStyle="bold" />
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
     </androidx.cardview.widget.CardView>
@@ -194,21 +245,7 @@
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
-    <!-- 设置按钮 -->
-    <Button
-        android:id="@+id/settings_button"
-        android:layout_width="wrap_content"
-        android:layout_height="40dp"
-        android:text="设置"
-        android:textSize="14sp"
-        android:textColor="@color/purple_700"
-        android:background="@drawable/button_secondary"
-        android:elevation="2dp"
-        android:stateListAnimator="@null"
-        android:layout_gravity="center"
-        android:layout_marginTop="16dp"
-        android:paddingLeft="24dp"
-        android:paddingRight="24dp" />
+
 
     <!-- 底部信息 -->
     <TextView

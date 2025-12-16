@@ -12,6 +12,8 @@ public class SettingsActivity extends AppCompatActivity {
     private SeekBar opacitySeekBar;
     private TextView opacityValue;
     private SeekBar fontSizeSeekBar;
+    private SeekBar questionLengthSeekBar;
+    private TextView questionLengthValue;
     private SharedPreferences sharedPreferences;
 
     @Override
@@ -76,6 +78,34 @@ public class SettingsActivity extends AppCompatActivity {
                 // 保存字体大小设置
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putInt("font_size", progress);
+                editor.apply();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        // 初始化题干字数限制设置
+        questionLengthSeekBar = findViewById(R.id.question_length_seekbar);
+        questionLengthValue = findViewById(R.id.question_length_value);
+
+        // 从SharedPreferences加载保存的题干字数限制值（0-200，0表示无限制）
+        int savedQuestionLength = sharedPreferences.getInt("question_length_limit", 50); // 默认50字
+        questionLengthSeekBar.setProgress(savedQuestionLength);
+        questionLengthValue.setText(savedQuestionLength > 0 ? savedQuestionLength + "字" : "无限制");
+
+        // 设置题干字数限制SeekBar的监听事件
+        questionLengthSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                // 更新题干字数限制显示值
+                questionLengthValue.setText(progress > 0 ? progress + "字" : "无限制");
+                // 保存题干字数限制设置
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putInt("question_length_limit", progress);
                 editor.apply();
             }
 

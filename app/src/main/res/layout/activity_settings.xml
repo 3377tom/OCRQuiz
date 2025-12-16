@@ -78,7 +78,8 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:layout_marginBottom="16dp">
 
                 <TextView
                     android:layout_width="match_parent"
@@ -127,6 +128,68 @@
                         android:layout_weight="1"
                         android:text="大"
                         android:textSize="16sp"
+                        android:textColor="@color/black"
+                        android:alpha="0.7"
+                        android:gravity="right" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- 题干字数限制设置 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="题干字数限制"
+                    android:textSize="16sp"
+                    android:textColor="@color/black"
+                    android:layout_marginBottom="8dp" />
+
+                <SeekBar
+                    android:id="@+id/question_length_seekbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="200"
+                    android:progress="50"
+                    android:progressDrawable="@android:drawable/progress_horizontal"
+                    android:thumb="@android:drawable/thumb" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="短"
+                        android:textSize="12sp"
+                        android:textColor="@color/black"
+                        android:alpha="0.7"
+                        android:gravity="left" />
+
+                    <TextView
+                        android:id="@+id/question_length_value"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="50字"
+                        android:textSize="14sp"
+                        android:textColor="@color/black"
+                        android:alpha="0.7"
+                        android:gravity="center" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="无限制"
+                        android:textSize="12sp"
                         android:textColor="@color/black"
                         android:alpha="0.7"
                         android:gravity="right" />

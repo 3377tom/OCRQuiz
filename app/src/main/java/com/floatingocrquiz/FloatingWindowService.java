@@ -28,6 +28,8 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.graphics.drawable.Drawable;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import android.widget.ImageButton;
 import android.widget.ScrollView;
 import android.text.SpannableStringBuilder;
@@ -176,11 +178,15 @@ public class FloatingWindowService extends Service {
         layoutParams.x = 100;
         layoutParams.y = 200;
         
-        // 设置窗口透明度（0.0-完全透明，1.0-完全不透明）
-        layoutParams.alpha = opacity / 100.0f;
-
         // 加载浮动窗口布局
         floatingView = LayoutInflater.from(this).inflate(R.layout.floating_window, null);
+        
+        // 设置悬浮窗背景透明度
+        ConstraintLayout floatingWindowContainer = floatingView.findViewById(R.id.floating_window_container);
+        Drawable background = floatingWindowContainer.getBackground();
+        if (background != null) {
+            background.setAlpha((int) (opacity * 2.55f)); // 转换为0-255范围
+        }
         answerTextView = floatingView.findViewById(R.id.answer_text);
         captureButton = floatingView.findViewById(R.id.capture_button);
         settingsButton = floatingView.findViewById(R.id.settings_button);

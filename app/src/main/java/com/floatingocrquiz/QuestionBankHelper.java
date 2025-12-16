@@ -1,6 +1,7 @@
 package com.floatingocrquiz;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -866,8 +867,13 @@ public class QuestionBankHelper {
      * @return 压缩后的文本
      */
     private String compressLongText(String text, int startKeep, int endKeep) {
-        if (text == null || text.length() <= startKeep + endKeep + 10) {
-            return text; // 文本长度适中，不需要压缩
+        // 从SharedPreferences获取题干字数限制设置
+        SharedPreferences sharedPreferences = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE);
+        int questionLengthLimit = sharedPreferences.getInt("question_length_limit", 50); // 默认50字
+        
+        // 如果设置了无限制（0）或者文本长度不超过限制，直接返回完整文本
+        if (questionLengthLimit == 0 || text == null || text.length() <= questionLengthLimit) {
+            return text;
         }
         
         // 调整末尾保留长度为6-7个文字

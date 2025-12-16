@@ -9,30 +9,30 @@
     android:padding="16dp"
     tools:context=".MainActivity">
 
-    <!-- 设置按钮 - 移到最顶部左侧 -->
-    <ImageButton
-        android:id="@+id/settings_button"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:src="@drawable/setting"
-        android:background="@null"
-        android:tint="@android:color/white"
-        android:adjustViewBounds="true"
-        android:scaleType="fitCenter"
-        android:layout_marginBottom="16dp"
-        android:contentDescription="设置" />
-
-    <!-- 顶部标题区域 -->
+    <!-- 顶部标题区域 - 包含设置按钮和应用标题 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center"
+        android:gravity="center_vertical"
         android:layout_marginBottom="32dp">
 
+        <!-- 设置按钮 - 移到最顶部左侧，与标题同一行 -->
+        <ImageButton
+            android:id="@+id/settings_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/setting"
+            android:background="@null"
+            android:tint="@android:color/white"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
+            android:contentDescription="设置" />
+
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center">
             <TextView
@@ -42,6 +42,9 @@
                 android:textSize="28sp"
                 android:textStyle="bold"
                 android:textColor="@android:color/white"
+                android:background="@drawable/button_primary"
+                android:paddingVertical="12dp"
+                android:paddingHorizontal="24dp"
                 android:layout_marginBottom="8dp" />
 
             <TextView
@@ -142,9 +145,8 @@
                     
                     <ImageButton
                         android:id="@+id/import_button"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
+                        android:layout_width="80dp"
+                        android:layout_height="80dp"
                         android:src="@drawable/import_icon"
                         android:background="@drawable/button_primary"
                         android:layout_marginBottom="8dp"
@@ -160,7 +162,7 @@
                         android:layout_height="wrap_content"
                         android:text="导入题库"
                         android:textSize="14sp"
-                        android:textColor="@color/purple_200"
+                        android:textColor="@color/purple_700"
                         android:textStyle="bold" />
                 </LinearLayout>
 
@@ -175,9 +177,8 @@
                     
                     <ImageButton
                         android:id="@+id/delete_all_button"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
+                        android:layout_width="80dp"
+                        android:layout_height="80dp"
                         android:src="@drawable/delete"
                         android:background="@drawable/button_secondary"
                         android:layout_marginBottom="8dp"
@@ -193,7 +194,7 @@
                         android:layout_height="wrap_content"
                         android:text="清空题库"
                         android:textSize="14sp"
-                        android:textColor="@color/purple_200"
+                        android:textColor="@color/purple_700"
                         android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>

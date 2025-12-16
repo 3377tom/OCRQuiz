@@ -36,6 +36,12 @@
             </intent-filter>
         </activity>
 
+        <!-- 设置界面Activity -->
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.FloatingOCRQuiz" />
+
         <!-- 媒体投影权限请求Activity -->
         <activity
             android:name=".MediaProjectionActivity"

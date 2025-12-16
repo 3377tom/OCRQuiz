@@ -178,24 +178,45 @@
                     android:textColor="@color/purple_700" />
             </LinearLayout>
 
-            <TextView
+            <ScrollView
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="1. 点击启动悬浮窗按钮打开悬浮窗\n2. 点击悬浮窗中的截图按钮识别题目\n3. 系统会自动搜索题库并显示答案\n4. 可通过导入按钮添加自定义题库"
-                android:textSize="14sp"
-                android:textColor="@color/black"
-                android:lineSpacingExtra="4dp"
-                android:alpha="0.8" />
+                android:layout_height="120dp"
+                android:scrollbars="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="1. 点击启动悬浮窗按钮打开悬浮窗\n2. 点击悬浮窗中的截图按钮识别题目\n3. 系统会自动搜索题库并显示答案\n4. 可通过导入按钮添加自定义题库"
+                    android:textSize="14sp"
+                    android:textColor="@color/black"
+                    android:lineSpacingExtra="4dp"
+                    android:alpha="0.8" />
+            </ScrollView>
         </LinearLayout>
     </androidx.cardview.widget.CardView>
+
+    <!-- 设置按钮 -->
+    <Button
+        android:id="@+id/settings_button"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:text="设置"
+        android:textSize="14sp"
+        android:textColor="@color/purple_700"
+        android:background="@drawable/button_secondary"
+        android:elevation="2dp"
+        android:stateListAnimator="@null"
+        android:layout_gravity="center"
+        android:layout_marginTop="16dp"
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp" />
 
     <!-- 底部信息 -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp"
-        android:text="© 2024 Floating OCR Quiz"
+        android:text="© 2024 忙答之"
         android:textSize="12sp"
         android:textColor="@android:color/white"
         android:alpha="0.7"

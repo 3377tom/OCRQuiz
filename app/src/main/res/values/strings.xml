@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Floating OCR Quiz</string>
+    <string name="app_name">忙答之</string>
     <string name="start_floating_window">启动浮动窗口</string>
     <string name="stop_floating_window">停止浮动窗口</string>
     <string name="import_question_bank">导入题库</string>

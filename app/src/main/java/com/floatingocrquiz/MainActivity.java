@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private Button stopButton;
     private Button importButton;
     private Button deleteAllButton;
+    private Button settingsButton;
     private QuestionBankHelper questionBankHelper;
     private View customToastView;
     private ViewGroup customToastWindowManager;
@@ -44,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
         stopButton = findViewById(R.id.stop_button);
         importButton = findViewById(R.id.import_button);
         deleteAllButton = findViewById(R.id.delete_all_button);
+        settingsButton = findViewById(R.id.settings_button);
         
         // 初始化题库助手（使用单例模式）
         questionBankHelper = QuestionBankHelper.getInstance(this);
@@ -52,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
         stopButton.setOnClickListener(v -> stopFloatingWindow());
         importButton.setOnClickListener(v -> importQuestionBank());
         deleteAllButton.setOnClickListener(v -> deleteAllQuestions());
+        settingsButton.setOnClickListener(v -> openSettings());
 
         // 检查并申请必要权限
         checkPermissions();
@@ -87,6 +90,12 @@ public class MainActivity extends AppCompatActivity {
         Intent serviceIntent = new Intent(this, FloatingWindowService.class);
         stopService(serviceIntent);
         Toast.makeText(this, "浮动窗口已停止", Toast.LENGTH_SHORT).show();
+    }
+
+    private void openSettings() {
+        // 打开设置界面
+        Intent intent = new Intent(this, SettingsActivity.class);
+        startActivity(intent);
     }
 
     /**

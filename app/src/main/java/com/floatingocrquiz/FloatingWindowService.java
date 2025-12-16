@@ -201,11 +201,7 @@ public class FloatingWindowService extends Service {
         
         // 设置关闭按钮点击事件
         closeButton.setOnClickListener(v -> {
-            // 移除悬浮窗视图
-            if (windowManager != null && floatingView != null) {
-                windowManager.removeView(floatingView);
-            }
-            // 停止服务
+            // 停止服务，让onDestroy()方法来统一处理资源清理
             stopSelf();
         });
 

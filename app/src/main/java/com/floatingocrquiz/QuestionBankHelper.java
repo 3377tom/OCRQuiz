@@ -876,8 +876,22 @@ public class QuestionBankHelper {
             return text;
         }
         
-        // 调整末尾保留长度为6-7个文字
-        endKeep = Math.min(7, Math.max(6, endKeep));
+        // 根据字数限制调整保留长度
+        // 总长度包括省略号 "..."（3个字符）
+        int ellipsisLength = 3;
+        int availableLength = questionLengthLimit - ellipsisLength;
+        
+        // 计算实际需要保留的开头和结尾长度
+        // 保证结尾至少保留6-7个文字
+        int minEndKeep = Math.min(7, Math.max(6, endKeep));
+        int actualEndKeep = Math.min(minEndKeep, availableLength - 10); // 开头至少保留10个字符
+        int actualStartKeep = availableLength - actualEndKeep;
+        
+        // 如果计算出的开头保留长度小于10，调整比例
+        if (actualStartKeep < 10) {
+            actualStartKeep = 10;
+            actualEndKeep = Math.min(availableLength - actualStartKeep, minEndKeep);
+        }
         
         // 查找括号内的内容，保留重要信息
         Pattern bracketPattern = Pattern.compile("[（(\\\\[\\\\{].*?[）)\\\\]\\\\}]");
@@ -888,14 +902,28 @@ public class QuestionBankHelper {
             int keyPartEnd = matcher.end();
             
             // 确保keyPart在文本中间位置
-            if (keyPartStart > startKeep && keyPartEnd < text.length() - endKeep) {
-                // 保留括号前后的2-3个文字
-                int beforeBracket = Math.max(0, keyPartStart - 3);
-                int afterBracket = Math.min(text.length(), keyPartEnd + 3);
+            if (keyPartStart > actualStartKeep && keyPartEnd < text.length() - actualEndKeep) {
+                // 计算括号内容的长度
+                int keyPartLength = keyPartEnd - keyPartStart;
                 
-                return text.substring(0, startKeep) + "..." + 
-                       text.substring(beforeBracket, afterBracket) + "..." + 
-                       text.substring(text.length() - endKeep);
+                // 根据可用长度调整保留的括号前后内容
+                int totalKeepLength = actualStartKeep + keyPartLength + actualEndKeep;
+                int extraLength = totalKeepLength - availableLength;
+                
+                // 如果总长度超过限制，适当减少开头或结尾保留长度
+                if (extraLength > 0) {
+                    if (actualStartKeep > actualEndKeep) {
+                        actualStartKeep -= extraLength;
+                        if (actualStartKeep < 5) actualStartKeep = 5;
+                    } else {
+                        actualEndKeep -= extraLength;
+                        if (actualEndKeep < 5) actualEndKeep = 5;
+                    }
+                }
+                
+                return text.substring(0, actualStartKeep) + "..." + 
+                       text.substring(keyPartStart, keyPartEnd) + "..." + 
+                       text.substring(text.length() - actualEndKeep);
             }
         }
         
@@ -908,19 +936,19 @@ public class QuestionBankHelper {
             int underlineEnd = matcher.end();
             
             // 确保下划线在文本中间位置
-            if (underlineStart > startKeep && underlineEnd < text.length() - endKeep) {
-                // 保留下划线前后的2-3个文字
-                int beforeUnderline = Math.max(0, underlineStart - 3);
-                int afterUnderline = Math.min(text.length(), underlineEnd + 3);
+            if (underlineStart > actualStartKeep && underlineEnd < text.length() - actualEndKeep) {
+                // 保留下划线前后的重要内容
+                int beforeUnderline = Math.max(0, underlineStart - 2);
+                int afterUnderline = Math.min(text.length(), underlineEnd + 2);
                 
-                return text.substring(0, startKeep) + "..." + 
+                return text.substring(0, actualStartKeep) + "..." + 
                        text.substring(beforeUnderline, afterUnderline) + "..." + 
-                       text.substring(text.length() - endKeep);
+                       text.substring(text.length() - actualEndKeep);
             }
         }
         
-        // 默认压缩方式：保留开头和结尾
-        return text.substring(0, startKeep) + "..." + text.substring(text.length() - endKeep);
+        // 默认压缩方式：保留开头和结尾，根据字数限制调整
+        return text.substring(0, actualStartKeep) + "..." + text.substring(text.length() - actualEndKeep);
     }
     
     /**

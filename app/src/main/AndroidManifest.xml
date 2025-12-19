@@ -28,7 +28,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.FloatingOCRQuiz">
+            android:theme="@style/Theme.FloatingOCRQuiz.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -40,7 +40,7 @@
         <activity
             android:name=".SettingsActivity"
             android:exported="false"
-            android:theme="@style/Theme.FloatingOCRQuiz" />
+            android:theme="@style/Theme.FloatingOCRQuiz.NoActionBar" />
 
         <!-- 媒体投影权限请求Activity -->
         <activity

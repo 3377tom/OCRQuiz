@@ -9,15 +9,18 @@
     android:padding="16dp"
     tools:context=".MainActivity">
 
-    <!-- 顶部标题区域 - 包含设置按钮和应用标题 -->
+    <!-- 统一的蓝色背景标题栏 - 包含设置按钮和应用标题 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_marginBottom="32dp">
+        android:background="@color/purple_700"
+        android:layout_marginBottom="32dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="16dp">
 
-        <!-- 设置按钮 - 移到最顶部左侧边缘 -->
+        <!-- 设置按钮 - 顶部左侧位置 -->
         <ImageButton
             android:id="@+id/settings_button"
             android:layout_width="48dp"
@@ -42,20 +45,20 @@
                 android:textSize="28sp"
                 android:textStyle="bold"
                 android:textColor="@android:color/white"
-                android:background="@drawable/button_primary"
-                android:paddingVertical="12dp"
-                android:paddingHorizontal="24dp"
-                android:layout_marginBottom="8dp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="智能识别，快速答题"
-                android:textSize="16sp"
-                android:textColor="@android:color/white"
-                android:alpha="0.9" />
+                android:layout_marginBottom="4dp" />
         </LinearLayout>
     </LinearLayout>
+    
+    <!-- 应用副标题 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="智能识别，快速答题"
+        android:textSize="16sp"
+        android:textColor="@android:color/white"
+        android:alpha="0.9"
+        android:layout_gravity="center"
+        android:layout_marginBottom="32dp" />
 
     <!-- 主要功能卡片 -->
     <androidx.cardview.widget.CardView
@@ -141,7 +144,8 @@
                     android:layout_weight="1"
                     android:orientation="vertical"
                     android:gravity="center"
-                    android:layout_marginRight="8dp">
+                    android:layout_marginRight="8dp"
+                    android:descendantFocusability="blocksDescendants">
                     
                     <ImageButton
                         android:id="@+id/import_button"
@@ -154,7 +158,9 @@
                         android:stateListAnimator="@null"
                         android:adjustViewBounds="true"
                         android:scaleType="fitCenter"
-                        android:contentDescription="导入题库" />
+                        android:contentDescription="导入题库"
+                        android:clickable="true"
+                        android:focusable="true" />
                     
                     <TextView
                         android:layout_width="wrap_content"
@@ -172,7 +178,8 @@
                     android:layout_weight="1"
                     android:orientation="vertical"
                     android:gravity="center"
-                    android:layout_marginLeft="8dp">
+                    android:layout_marginLeft="8dp"
+                    android:descendantFocusability="blocksDescendants">
                     
                     <ImageButton
                         android:id="@+id/delete_all_button"
@@ -185,7 +192,9 @@
                         android:stateListAnimator="@null"
                         android:adjustViewBounds="true"
                         android:scaleType="fitCenter"
-                        android:contentDescription="清空题库" />
+                        android:contentDescription="清空题库"
+                        android:clickable="true"
+                        android:focusable="true" />
                     
                     <TextView
                         android:layout_width="wrap_content"

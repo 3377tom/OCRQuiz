@@ -199,8 +199,16 @@ public class ScreenCaptureService extends Service {
             OCRApplication ocrApplication = (OCRApplication) getApplication();
             boolean isFirstCapture = ocrApplication.isFirstCapture();
             
-            // 设置延时时间：第一次截图3000ms，后续200ms
-            long delayTime = isFirstCapture ? 5000 : 200;
+            // 设置延时时间：第一次截图从SharedPreferences读取，后续200ms
+            long delayTime;
+            if (isFirstCapture) {
+                // 从SharedPreferences读取保存的截图延迟值
+                SharedPreferences sharedPreferences = getSharedPreferences("app_settings", MODE_PRIVATE);
+                int savedScreenshotDelay = sharedPreferences.getInt("screenshot_delay", 0); // 默认0，对应200ms
+                delayTime = savedScreenshotDelay * 100 + 200; // 计算公式：delayTime = progress * 100 + 200
+            } else {
+                delayTime = 200;
+            }
             
             // 创建虚拟显示，根据是否是第一次截图设置不同的延迟时间
             handler.postDelayed(new Runnable() {
@@ -324,8 +332,16 @@ public class ScreenCaptureService extends Service {
             // 获取OCRApplication实例，检查是否是第一次截图
             boolean isFirstCapture = ocrApplication.isFirstCapture();
             
-            // 设置延时时间：第一次截图3000ms，后续200ms
-            long delayTime = isFirstCapture ? 3000 : 200;
+            // 设置延时时间：第一次截图从SharedPreferences读取，后续200ms
+            long delayTime;
+            if (isFirstCapture) {
+                // 从SharedPreferences读取保存的截图延迟值
+                SharedPreferences sharedPreferences = getSharedPreferences("app_settings", MODE_PRIVATE);
+                int savedScreenshotDelay = sharedPreferences.getInt("screenshot_delay", 0); // 默认0，对应200ms
+                delayTime = savedScreenshotDelay * 100 + 200; // 计算公式：delayTime = progress * 100 + 200
+            } else {
+                delayTime = 200;
+            }
 
             // 创建虚拟显示，根据是否是第一次截图设置不同的延迟时间
             handler.postDelayed(new Runnable() {

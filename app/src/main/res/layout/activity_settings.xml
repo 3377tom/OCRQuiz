@@ -40,7 +40,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="悬浮窗设置"
-                android:textSize="18sp"
+                android:textSize="10.8sp"
                 android:textStyle="bold"
                 android:textColor="@color/purple_700"
                 android:layout_marginBottom="16dp" />
@@ -56,7 +56,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="悬浮窗透明度"
-                    android:textSize="16sp"
+                    android:textSize="9.6sp"
                     android:textColor="@color/black"
                     android:layout_marginBottom="8dp" />
 
@@ -72,7 +72,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="80%"
-                    android:textSize="14sp"
+                    android:textSize="8.4sp"
                     android:textColor="@color/black"
                     android:alpha="0.7"
                     android:gravity="right" />
@@ -89,7 +89,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="字体大小"
-                    android:textSize="16sp"
+                    android:textSize="9.6sp"
                     android:textColor="@color/black"
                     android:layout_marginBottom="8dp" />
 
@@ -111,7 +111,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="小"
-                        android:textSize="12sp"
+                        android:textSize="7.2sp"
                         android:textColor="@color/black"
                         android:alpha="0.7"
                         android:gravity="left" />
@@ -121,7 +121,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="中"
-                        android:textSize="14sp"
+                        android:textSize="8.4sp"
                         android:textColor="@color/black"
                         android:alpha="0.7"
                         android:gravity="center" />
@@ -131,7 +131,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="大"
-                        android:textSize="16sp"
+                        android:textSize="9.6sp"
                         android:textColor="@color/black"
                         android:alpha="0.7"
                         android:gravity="right" />
@@ -171,7 +171,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="短"
-                        android:textSize="12sp"
+                        android:textSize="7.2sp"
                         android:textColor="@color/black"
                         android:alpha="0.7"
                         android:gravity="left" />
@@ -182,7 +182,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="50字"
-                        android:textSize="14sp"
+                        android:textSize="8.4sp"
                         android:textColor="@color/black"
                         android:alpha="0.7"
                         android:gravity="center" />
@@ -242,7 +242,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="200ms"
-                        android:textSize="14sp"
+                        android:textSize="8.4sp"
                         android:textColor="@color/black"
                         android:alpha="0.7"
                         android:gravity="center" />
@@ -284,7 +284,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="软件说明"
-                android:textSize="18sp"
+                android:textSize="10.8sp"
                 android:textStyle="bold"
                 android:textColor="@color/purple_700"
                 android:layout_marginBottom="16dp" />

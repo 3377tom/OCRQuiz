@@ -94,7 +94,7 @@ public class OCRHelper {
             // 关闭之前的预测器（如果存在）
             if (paddleOCRPredictor != null) {
                 try {
-                    paddleOCRPredictor.close();
+                    // PaddlePredictor类没有close()方法，直接设置为null
                     paddleOCRPredictor = null;
                     Log.d(TAG, "已关闭之前的PaddleOCR预测器");
                 } catch (Exception e) {
@@ -247,11 +247,12 @@ public class OCRHelper {
             // 重新初始化PaddleOCR以切换模型
             if (paddleOCRPredictor != null) {
                 try {
-                    paddleOCRPredictor.close();
+                    // PaddlePredictor类没有close()方法，直接设置为null
+                    paddleOCRPredictor = null;
+                    Log.d(TAG, "已关闭之前的PaddleOCR预测器");
                 } catch (Exception e) {
                     Log.e(TAG, "关闭PaddleOCR预测器失败: " + e.getMessage());
                 }
-                paddleOCRPredictor = null;
             }
             initPaddleOCR();
         }
@@ -784,7 +785,7 @@ public class OCRHelper {
             
             // 释放PaddleOCR资源
             if (paddleOCRPredictor != null) {
-                paddleOCRPredictor.release();
+                // PaddlePredictor类没有release()方法，直接设置为null
                 paddleOCRPredictor = null;
                 Log.d(TAG, "PaddleOCR资源释放成功");
             }

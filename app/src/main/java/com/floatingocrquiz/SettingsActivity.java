@@ -2,6 +2,8 @@ package com.floatingocrquiz;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,6 +18,9 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView questionLengthValue;
     private SeekBar screenshotDelaySeekBar;
     private TextView screenshotDelayValue;
+    private RadioGroup ocrInterfaceRadioGroup;
+    private RadioButton baiduOcrRadio;
+    private RadioButton paddleOcrRadio;
     private SharedPreferences sharedPreferences;
 
     @Override
@@ -144,6 +149,38 @@ public class SettingsActivity extends AppCompatActivity {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        // 初始化OCR接口选择设置
+        ocrInterfaceRadioGroup = findViewById(R.id.ocr_interface_radio_group);
+        baiduOcrRadio = findViewById(R.id.baidu_ocr_radio);
+        paddleOcrRadio = findViewById(R.id.paddle_ocr_radio);
+
+        // 从SharedPreferences加载保存的OCR接口设置
+        String savedOcrInterface = sharedPreferences.getString("ocr_interface", "BAIDU_OCR");
+        if (savedOcrInterface.equals("PADDLE_OCR")) {
+            paddleOcrRadio.setChecked(true);
+        } else {
+            baiduOcrRadio.setChecked(true);
+        }
+
+        // 设置OCR接口选择的监听事件
+        ocrInterfaceRadioGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            String selectedInterface;
+            if (checkedId == R.id.baidu_ocr_radio) {
+                selectedInterface = "BAIDU_OCR";
+            } else {
+                selectedInterface = "PADDLE_OCR";
+            }
+            // 保存OCR接口设置
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("ocr_interface", selectedInterface);
+            editor.apply();
+            
+            // 更新OCRHelper中的当前接口
+            OCRHelper.getInstance(SettingsActivity.this).setCurrentOCRInterface(
+                    OCRHelper.OCRInterfaceType.valueOf(selectedInterface)
+            );
         });
     }
 

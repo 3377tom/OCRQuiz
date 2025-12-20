@@ -64,9 +64,8 @@ dependencies {
     implementation(name: 'ocrsdk', ext: 'aar')
     implementation files('libs/license.jar')
     
-    // Paddle-Lite 依赖
-    implementation 'com.baidu.paddle.lite:paddlelite:2.14.1'
-    implementation 'com.baidu.paddle.lite:ocr:2.14.1'
+    // Paddle-Lite 本地依赖
+    implementation files('libs/paddlelite.jar')
     
     // PaddleOCR 相关依赖
     implementation 'org.tensorflow:tensorflow-lite-support:0.4.4'

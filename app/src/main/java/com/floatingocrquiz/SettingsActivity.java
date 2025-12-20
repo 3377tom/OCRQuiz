@@ -14,6 +14,8 @@ public class SettingsActivity extends AppCompatActivity {
     private SeekBar fontSizeSeekBar;
     private SeekBar questionLengthSeekBar;
     private TextView questionLengthValue;
+    private SeekBar screenshotDelaySeekBar;
+    private TextView screenshotDelayValue;
     private SharedPreferences sharedPreferences;
 
     @Override
@@ -115,5 +117,45 @@ public class SettingsActivity extends AppCompatActivity {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {}
         });
+
+        // 初始化截图延迟设置
+        screenshotDelaySeekBar = findViewById(R.id.screenshot_delay_seekbar);
+        screenshotDelayValue = findViewById(R.id.screenshot_delay_value);
+
+        // 从SharedPreferences加载保存的截图延迟值（0-118对应200ms-12s）
+        int savedDelay = sharedPreferences.getInt("screenshot_delay", 0); // 默认200ms
+        screenshotDelaySeekBar.setProgress(savedDelay);
+        updateDelayValue(savedDelay);
+
+        // 设置截图延迟SeekBar的监听事件
+        screenshotDelaySeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                // 更新截图延迟显示值
+                updateDelayValue(progress);
+                // 保存截图延迟设置
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putInt("screenshot_delay", progress);
+                editor.apply();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+    }
+
+    // 更新截图延迟显示值
+    private void updateDelayValue(int progress) {
+        // 计算实际延迟时间：200ms + progress * 100ms
+        long delayMillis = 200 + progress * 100;
+        if (delayMillis < 1000) {
+            screenshotDelayValue.setText(delayMillis + "ms");
+        } else {
+            double delaySeconds = delayMillis / 1000.0;
+            screenshotDelayValue.setText(String.format("%.1fs", delaySeconds));
+        }
     }
 }

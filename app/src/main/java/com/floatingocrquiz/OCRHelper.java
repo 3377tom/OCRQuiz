@@ -1,6 +1,7 @@
 package com.floatingocrquiz;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.util.Log;
 
@@ -288,7 +289,7 @@ public class OCRHelper {
     /**
      * 格式化识别结果
      * @param result 识别结果
-     * @return 格式化后的文本
+     * @return 格式化后的文本，已应用题干字数限制
      */
     private String formatResult(GeneralResult result) {
         // 使用泛型避免类型转换错误
@@ -299,7 +300,36 @@ public class OCRHelper {
             sb.append(word.getWords()).append("\n");
         }
         
-        return sb.toString().trim();
+        String fullText = sb.toString().trim();
+        
+        // 应用题干字数限制
+        return applyQuestionLengthLimit(fullText);
+    }
+    
+    /**
+     * 应用题干字数限制
+     * @param text 原始文本
+     * @return 应用限制后的文本
+     */
+    private String applyQuestionLengthLimit(String text) {
+        if (text == null || text.isEmpty()) {
+            return text;
+        }
+        
+        try {
+            // 从SharedPreferences获取题干字数限制设置
+            SharedPreferences prefs = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE);
+            int limit = prefs.getInt("question_length_limit", 50); // 默认50字
+            
+            // 如果限制大于0且文本长度超过限制，则截断
+            if (limit > 0 && text.length() > limit) {
+                return text.substring(0, limit) + "...";
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "读取题干字数限制设置失败: " + e.getMessage());
+        }
+        
+        return text;
     }
     
     /**

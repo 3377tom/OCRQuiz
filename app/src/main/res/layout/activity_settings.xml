@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@drawable/gradient_background">
 
     <!-- 工具栏 -->
@@ -14,16 +13,21 @@
         android:background="@color/purple_700"
         android:elevation="4dp"
         app:title="设置"
-        app:titleTextColor="@android:color/white" />
+        app:titleTextColor="@android:color/white"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- 设置内容 -->
     <androidx.cardview.widget.CardView
+        android:id="@+id/settings_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         app:cardCornerRadius="12dp"
         app:cardElevation="4dp"
-        app:cardBackgroundColor="@android:color/white">
+        app:cardBackgroundColor="@android:color/white"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -138,7 +142,8 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:layout_marginBottom="16dp">
 
                 <TextView
                     android:layout_width="match_parent"
@@ -153,8 +158,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:max="200"
-                    android:progress="50"
-                    android:progressDrawable="@android:drawable/progress_horizontal" />
+                    android:progress="50" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -194,17 +198,80 @@
                         android:gravity="right" />
                 </LinearLayout>
             </LinearLayout>
+
+            <!-- 截图延迟设置 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="截图延迟设置"
+                    android:textSize="16sp"
+                    android:textColor="@color/black"
+                    android:layout_marginBottom="8dp" />
+
+                <SeekBar
+                    android:id="@+id/screenshot_delay_seekbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="118"
+                    android:progress="0" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="200ms"
+                        android:textSize="12sp"
+                        android:textColor="@color/black"
+                        android:alpha="0.7"
+                        android:gravity="left" />
+
+                    <TextView
+                        android:id="@+id/screenshot_delay_value"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="200ms"
+                        android:textSize="14sp"
+                        android:textColor="@color/black"
+                        android:alpha="0.7"
+                        android:gravity="center" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="12s"
+                        android:textSize="12sp"
+                        android:textColor="@color/black"
+                        android:alpha="0.7"
+                        android:gravity="right" />
+                </LinearLayout>
+            </LinearLayout>
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
     <!-- 软件说明卡片 -->
     <androidx.cardview.widget.CardView
+        android:id="@+id/about_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         app:cardCornerRadius="12dp"
         app:cardElevation="4dp"
-        app:cardBackgroundColor="@android:color/white">
+        app:cardBackgroundColor="@android:color/white"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/settings_card" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -252,4 +319,4 @@
                 android:lineSpacingExtra="4dp" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

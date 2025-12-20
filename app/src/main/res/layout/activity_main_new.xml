@@ -6,48 +6,43 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@drawable/gradient_background"
-    android:padding="16dp"
+    android:padding="0dp"
     tools:context=".MainActivity">
 
     <!-- 统一的蓝色背景标题栏 - 包含设置按钮和应用标题 -->
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
         android:background="@color/purple_700"
-        android:layout_marginBottom="32dp"
         android:paddingHorizontal="16dp"
         android:paddingVertical="16dp">
 
         <!-- 设置按钮 - 顶部左侧位置 -->
         <ImageButton
             android:id="@+id/settings_button"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:src="@drawable/setting"
             android:background="@null"
             android:tint="@android:color/white"
             android:adjustViewBounds="true"
             android:scaleType="fitCenter"
-            android:contentDescription="设置" />
+            android:maxWidth="48dp"
+            android:maxHeight="48dp"
+            android:contentDescription="设置"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true" />
 
-        <LinearLayout
-            android:layout_width="0dp"
+        <!-- 应用标题 - 居中显示 -->
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="忙答之"
-                android:textSize="28sp"
-                android:textStyle="bold"
-                android:textColor="@android:color/white"
-                android:layout_marginBottom="4dp" />
-        </LinearLayout>
-    </LinearLayout>
+            android:text="忙答之"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:layout_centerInParent="true" />
+    </RelativeLayout>
     
     <!-- 应用副标题 -->
     <TextView
@@ -58,16 +53,26 @@
         android:textColor="@android:color/white"
         android:alpha="0.9"
         android:layout_gravity="center"
-        android:layout_marginBottom="32dp" />
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="32dp" 
+        android:paddingHorizontal="16dp" />
 
-    <!-- 主要功能卡片 -->
-    <androidx.cardview.widget.CardView
+    <!-- 主要内容区域 -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="4dp"
-        app:cardBackgroundColor="@android:color/white">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- 主要功能卡片 -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="@android:color/white">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -149,15 +154,17 @@
                     
                     <ImageButton
                         android:id="@+id/import_button"
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                         android:src="@drawable/import_icon"
                         android:background="@null"
                         android:layout_marginBottom="8dp"
-                        android:elevation="2dp"
-                        android:stateListAnimator="@null"
                         android:adjustViewBounds="true"
                         android:scaleType="fitCenter"
+                        android:maxWidth="120dp"
+                        android:maxHeight="120dp"
+                        android:minWidth="80dp"
+                        android:minHeight="80dp"
                         android:contentDescription="导入题库"
                         android:clickable="true"
                         android:focusable="true" />
@@ -168,7 +175,11 @@
                         android:text="导入题库"
                         android:textSize="14sp"
                         android:textColor="@color/purple_700"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"
+                        android:autoSizeTextType="uniform"
+                        android:autoSizeMinTextSize="12sp"
+                        android:autoSizeMaxTextSize="18sp"
+                        android:autoSizeStepGranularity="2sp" />
                 </LinearLayout>
 
                 <!-- 删除按钮 -->
@@ -183,15 +194,17 @@
                     
                     <ImageButton
                         android:id="@+id/delete_all_button"
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                         android:src="@drawable/delete"
                         android:background="@null"
                         android:layout_marginBottom="8dp"
-                        android:elevation="2dp"
-                        android:stateListAnimator="@null"
                         android:adjustViewBounds="true"
                         android:scaleType="fitCenter"
+                        android:maxWidth="120dp"
+                        android:maxHeight="120dp"
+                        android:minWidth="80dp"
+                        android:minHeight="80dp"
                         android:contentDescription="清空题库"
                         android:clickable="true"
                         android:focusable="true" />
@@ -202,7 +215,11 @@
                         android:text="清空题库"
                         android:textSize="14sp"
                         android:textColor="@color/purple_700"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"
+                        android:autoSizeTextType="uniform"
+                        android:autoSizeMinTextSize="12sp"
+                        android:autoSizeMaxTextSize="18sp"
+                        android:autoSizeStepGranularity="2sp" />
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
@@ -263,15 +280,16 @@
 
 
 
-    <!-- 底部信息 -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"
-        android:text="© 2024 忙答之"
-        android:textSize="12sp"
-        android:textColor="@android:color/white"
-        android:alpha="0.7"
-        android:gravity="center" />
+        <!-- 底部信息 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:text="© 2024 忙答之"
+            android:textSize="12sp"
+            android:textColor="@android:color/white"
+            android:alpha="0.7"
+            android:gravity="center" />
+    </LinearLayout>
 </LinearLayout>

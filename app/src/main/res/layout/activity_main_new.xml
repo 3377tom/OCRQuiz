@@ -100,7 +100,7 @@
                 <Button
                     android:id="@+id/start_button"
                     android:layout_width="0dp"
-                    android:layout_height="32dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="启动悬浮窗"
                     android:textSize="12sp"
@@ -108,12 +108,15 @@
                     android:background="@drawable/button_primary"
                     android:layout_marginRight="8dp"
                     android:elevation="2dp"
-                    android:stateListAnimator="@null" />
+                    android:stateListAnimator="@null"
+                    android:paddingVertical="8dp"
+                    android:paddingHorizontal="12dp"
+                    android:minHeight="48dp" /> <!-- Material Design 推荐的最小触摸区域 -->
 
                 <Button
                     android:id="@+id/stop_button"
                     android:layout_width="0dp"
-                    android:layout_height="32dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="停止悬浮窗"
                     android:textSize="12sp"
@@ -121,7 +124,10 @@
                     android:background="@drawable/button_secondary"
                     android:layout_marginLeft="8dp"
                     android:elevation="2dp"
-                    android:stateListAnimator="@null" />
+                    android:stateListAnimator="@null"
+                    android:paddingVertical="8dp"
+                    android:paddingHorizontal="12dp"
+                    android:minHeight="48dp" /> <!-- Material Design 推荐的最小触摸区域 -->
             </LinearLayout>
 
             <!-- 题库管理 -->

@@ -14,6 +14,7 @@
         android:elevation="4dp"
         app:title="设置"
         app:titleTextColor="@android:color/white"
+        app:titleTextAppearance="@style/ToolbarTitleStyle"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -40,10 +41,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="悬浮窗设置"
-                android:textSize="10.8sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="@color/purple_700"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="16dp"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="10sp"
+                android:autoSizeMaxTextSize="18sp"
+                android:autoSizeStepGranularity="2sp" />
 
             <!-- 透明度设置 -->
             <LinearLayout
@@ -56,9 +61,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="悬浮窗透明度"
-                    android:textSize="9.6sp"
+                    android:textSize="12sp"
                     android:textColor="@color/black"
-                    android:layout_marginBottom="8dp" />
+                    android:layout_marginBottom="8dp"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="8sp"
+                    android:autoSizeMaxTextSize="16sp"
+                    android:autoSizeStepGranularity="2sp" />
 
                 <SeekBar
                     android:id="@+id/opacity_seekbar"
@@ -75,7 +84,11 @@
                     android:textSize="8.4sp"
                     android:textColor="@color/black"
                     android:alpha="0.7"
-                    android:gravity="right" />
+                    android:gravity="right"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="6sp"
+                    android:autoSizeMaxTextSize="12sp"
+                    android:autoSizeStepGranularity="1sp" />
             </LinearLayout>
 
             <!-- 字体大小设置 -->
@@ -89,9 +102,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="字体大小"
-                    android:textSize="9.6sp"
+                    android:textSize="12sp"
                     android:textColor="@color/black"
-                    android:layout_marginBottom="8dp" />
+                    android:layout_marginBottom="8dp"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="8sp"
+                    android:autoSizeMaxTextSize="16sp"
+                    android:autoSizeStepGranularity="2sp" />
 
                 <SeekBar
                     android:id="@+id/font_size_seekbar"
@@ -107,34 +124,46 @@
                     android:layout_marginTop="8dp">
 
                     <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="小"
-                        android:textSize="8sp"
-                        android:textColor="@color/black"
-                        android:alpha="0.7"
-                        android:gravity="left" />
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="小"
+                    android:textSize="8sp"
+                    android:textColor="@color/black"
+                    android:alpha="0.7"
+                    android:gravity="left"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="6sp"
+                    android:autoSizeMaxTextSize="12sp"
+                    android:autoSizeStepGranularity="1sp" />
 
                     <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="中"
-                        android:textSize="10sp"
-                        android:textColor="@color/black"
-                        android:alpha="0.7"
-                        android:gravity="center" />
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="中"
+                    android:textSize="10sp"
+                    android:textColor="@color/black"
+                    android:alpha="0.7"
+                    android:gravity="center"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="8sp"
+                    android:autoSizeMaxTextSize="14sp"
+                    android:autoSizeStepGranularity="1sp" />
 
                     <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="大"
-                        android:textSize="12sp"
-                        android:textColor="@color/black"
-                        android:alpha="0.7"
-                        android:gravity="right" />
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="大"
+                    android:textSize="12sp"
+                    android:textColor="@color/black"
+                    android:alpha="0.7"
+                    android:gravity="right"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="10sp"
+                    android:autoSizeMaxTextSize="16sp"
+                    android:autoSizeStepGranularity="1sp" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -151,7 +180,11 @@
                     android:text="题干字数限制"
                     android:textSize="12sp"
                     android:textColor="@color/black"
-                    android:layout_marginBottom="8dp" />
+                    android:layout_marginBottom="8dp"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="8sp"
+                    android:autoSizeMaxTextSize="16sp"
+                    android:autoSizeStepGranularity="2sp" />
 
                 <SeekBar
                     android:id="@+id/question_length_seekbar"
@@ -167,35 +200,47 @@
                     android:layout_marginTop="8dp">
 
                     <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="短"
-                        android:textSize="12sp"
-                        android:textColor="@color/black"
-                        android:alpha="0.7"
-                        android:gravity="left" />
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="短"
+                    android:textSize="12sp"
+                    android:textColor="@color/black"
+                    android:alpha="0.7"
+                    android:gravity="left"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="10sp"
+                    android:autoSizeMaxTextSize="16sp"
+                    android:autoSizeStepGranularity="1sp" />
 
                     <TextView
-                        android:id="@+id/question_length_value"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="50字"
-                        android:textSize="12sp"
-                        android:textColor="@color/black"
-                        android:alpha="0.7"
-                        android:gravity="center" />
+                    android:id="@+id/question_length_value"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="50字"
+                    android:textSize="12sp"
+                    android:textColor="@color/black"
+                    android:alpha="0.7"
+                    android:gravity="center"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="10sp"
+                    android:autoSizeMaxTextSize="16sp"
+                    android:autoSizeStepGranularity="1sp" />
 
                     <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="无限制"
-                        android:textSize="12sp"
-                        android:textColor="@color/black"
-                        android:alpha="0.7"
-                        android:gravity="right" />
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="无限制"
+                    android:textSize="12sp"
+                    android:textColor="@color/black"
+                    android:alpha="0.7"
+                    android:gravity="right"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="10sp"
+                    android:autoSizeMaxTextSize="16sp"
+                    android:autoSizeStepGranularity="1sp" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -211,7 +256,11 @@
                     android:text="首次截图选区延迟设置"
                     android:textSize="12sp"
                     android:textColor="@color/black"
-                    android:layout_marginBottom="8dp" />
+                    android:layout_marginBottom="8dp"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="8sp"
+                    android:autoSizeMaxTextSize="16sp"
+                    android:autoSizeStepGranularity="2sp" />
 
                 <SeekBar
                     android:id="@+id/screenshot_delay_seekbar"
@@ -227,35 +276,47 @@
                     android:layout_marginTop="8dp">
 
                     <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="200ms"
-                        android:textSize="12sp"
-                        android:textColor="@color/black"
-                        android:alpha="0.7"
-                        android:gravity="left" />
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="200ms"
+                    android:textSize="12sp"
+                    android:textColor="@color/black"
+                    android:alpha="0.7"
+                    android:gravity="left"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="10sp"
+                    android:autoSizeMaxTextSize="16sp"
+                    android:autoSizeStepGranularity="1sp" />
 
                     <TextView
-                        android:id="@+id/screenshot_delay_value"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="200ms"
-                        android:textSize="12sp"
-                        android:textColor="@color/black"
-                        android:alpha="0.7"
-                        android:gravity="center" />
+                    android:id="@+id/screenshot_delay_value"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="200ms"
+                    android:textSize="12sp"
+                    android:textColor="@color/black"
+                    android:alpha="0.7"
+                    android:gravity="center"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="10sp"
+                    android:autoSizeMaxTextSize="16sp"
+                    android:autoSizeStepGranularity="1sp" />
 
                     <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="12s"
-                        android:textSize="12sp"
-                        android:textColor="@color/black"
-                        android:alpha="0.7"
-                        android:gravity="right" />
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="12s"
+                    android:textSize="12sp"
+                    android:textColor="@color/black"
+                    android:alpha="0.7"
+                    android:gravity="right"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="10sp"
+                    android:autoSizeMaxTextSize="16sp"
+                    android:autoSizeStepGranularity="1sp" />
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
@@ -287,7 +348,11 @@
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="@color/purple_700"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="16dp"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="10sp"
+                android:autoSizeMaxTextSize="18sp"
+                android:autoSizeStepGranularity="2sp" />
 
             <!-- 软件说明内容 -->
             <TextView
@@ -297,7 +362,11 @@
                 android:textSize="12sp"
                 android:textColor="@color/black"
                 android:lineSpacingExtra="4dp"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="16dp"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="10sp"
+                android:autoSizeMaxTextSize="16sp"
+                android:autoSizeStepGranularity="2sp" />
 
             <!-- 关于作者标题 -->
             <TextView
@@ -307,7 +376,11 @@
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="@color/purple_700"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="16dp"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="10sp"
+                android:autoSizeMaxTextSize="18sp"
+                android:autoSizeStepGranularity="2sp" />
 
             <!-- 关于作者内容 -->
             <TextView
@@ -316,7 +389,11 @@
                 android:text="作者：忙答之开发团队\n版本：1.0.0\n联系方式：support@miniya.com"
                 android:textSize="14sp"
                 android:textColor="@color/black"
-                android:lineSpacingExtra="4dp" />
+                android:lineSpacingExtra="4dp"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="10sp"
+                android:autoSizeMaxTextSize="18sp"
+                android:autoSizeStepGranularity="2sp" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 </androidx.constraintlayout.widget.ConstraintLayout>

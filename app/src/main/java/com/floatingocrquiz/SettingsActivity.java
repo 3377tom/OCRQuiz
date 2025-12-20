@@ -21,6 +21,9 @@ public class SettingsActivity extends AppCompatActivity {
     private RadioGroup ocrInterfaceRadioGroup;
     private RadioButton baiduOcrRadio;
     private RadioButton paddleOcrRadio;
+    private RadioGroup ocrLanguageRadioGroup;
+    private RadioButton chineseOcrRadio;
+    private RadioButton englishOcrRadio;
     private SharedPreferences sharedPreferences;
 
     @Override
@@ -180,6 +183,38 @@ public class SettingsActivity extends AppCompatActivity {
             // 更新OCRHelper中的当前接口
             OCRHelper.getInstance(SettingsActivity.this).setCurrentOCRInterface(
                     OCRHelper.OCRInterfaceType.valueOf(selectedInterface)
+            );
+        });
+        
+        // 初始化OCR语言选择设置
+        ocrLanguageRadioGroup = findViewById(R.id.ocr_language_radio_group);
+        chineseOcrRadio = findViewById(R.id.chinese_ocr_radio);
+        englishOcrRadio = findViewById(R.id.english_ocr_radio);
+        
+        // 从SharedPreferences加载保存的OCR语言设置
+        String savedOcrLanguage = sharedPreferences.getString("ocr_language", "CHINESE");
+        if (savedOcrLanguage.equals("ENGLISH")) {
+            englishOcrRadio.setChecked(true);
+        } else {
+            chineseOcrRadio.setChecked(true);
+        }
+        
+        // 设置OCR语言选择的监听事件
+        ocrLanguageRadioGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            String selectedLanguage;
+            if (checkedId == R.id.chinese_ocr_radio) {
+                selectedLanguage = "CHINESE";
+            } else {
+                selectedLanguage = "ENGLISH";
+            }
+            // 保存OCR语言设置
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("ocr_language", selectedLanguage);
+            editor.apply();
+            
+            // 更新OCRHelper中的当前语言
+            OCRHelper.getInstance(SettingsActivity.this).setCurrentOCRLanguage(
+                    OCRHelper.OCRLanguageType.valueOf(selectedLanguage)
             );
         });
     }

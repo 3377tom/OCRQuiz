@@ -27,8 +27,8 @@
             android:tint="@android:color/white"
             android:adjustViewBounds="true"
             android:scaleType="fitCenter"
-            android:maxWidth="16dp"
-            android:maxHeight="16dp"
+            android:maxWidth="20dp"
+            android:maxHeight="20dp"
             android:contentDescription="设置"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true" />
@@ -53,8 +53,8 @@
         android:textColor="@android:color/white"
         android:alpha="0.9"
         android:layout_gravity="center"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="32dp" 
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp" 
         android:paddingHorizontal="16dp" />
 
     <!-- 主要内容区域 -->
@@ -84,7 +84,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="悬浮窗口"
-                android:textSize="10.8sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="@color/purple_700"
                 android:layout_marginBottom="12dp" />
@@ -95,15 +95,15 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:weightSum="2"
-                android:layout_marginBottom="16dp">
+                android:layout_marginBottom="8dp">
 
                 <Button
                     android:id="@+id/start_button"
                     android:layout_width="0dp"
-                    android:layout_height="48dp"
+                    android:layout_height="32dp"
                     android:layout_weight="1"
                     android:text="启动悬浮窗"
-                    android:textSize="9.6sp"
+                    android:textSize="12sp"
                     android:textColor="@android:color/white"
                     android:background="@drawable/button_primary"
                     android:layout_marginRight="8dp"
@@ -113,10 +113,10 @@
                 <Button
                     android:id="@+id/stop_button"
                     android:layout_width="0dp"
-                    android:layout_height="48dp"
+                    android:layout_height="32dp"
                     android:layout_weight="1"
                     android:text="停止悬浮窗"
-                    android:textSize="9.6sp"
+                    android:textSize="12sp"
                     android:textColor="@android:color/white"
                     android:background="@drawable/button_secondary"
                     android:layout_marginLeft="8dp"
@@ -129,7 +129,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="题库管理"
-                android:textSize="10.8sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="@color/purple_700"
                 android:layout_marginBottom="12dp" />
@@ -154,17 +154,13 @@
                     
                     <ImageButton
                         android:id="@+id/import_button"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
                         android:src="@drawable/import_icon"
                         android:background="@null"
                         android:layout_marginBottom="8dp"
                         android:adjustViewBounds="true"
                         android:scaleType="fitCenter"
-                        android:maxWidth="40dp"
-                    android:maxHeight="40dp"
-                    android:minWidth="27dp"
-                    android:minHeight="27dp"
                         android:contentDescription="导入题库"
                         android:clickable="true"
                         android:focusable="true" />
@@ -173,12 +169,12 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="导入题库"
-                        android:textSize="8.4sp"
+                        android:textSize="12sp"
                         android:textColor="@color/purple_700"
                         android:textStyle="bold"
                         android:autoSizeTextType="uniform"
-                        android:autoSizeMinTextSize="12sp"
-                        android:autoSizeMaxTextSize="18sp"
+                        android:autoSizeMinTextSize="8sp"
+                        android:autoSizeMaxTextSize="14sp"
                         android:autoSizeStepGranularity="2sp" />
                 </LinearLayout>
 
@@ -194,17 +190,13 @@
                     
                     <ImageButton
                         android:id="@+id/delete_all_button"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
                         android:src="@drawable/delete"
                         android:background="@null"
                         android:layout_marginBottom="8dp"
                         android:adjustViewBounds="true"
                         android:scaleType="fitCenter"
-                        android:maxWidth="40dp"
-                    android:maxHeight="40dp"
-                    android:minWidth="27dp"
-                    android:minHeight="27dp"
                         android:contentDescription="清空题库"
                         android:clickable="true"
                         android:focusable="true" />
@@ -213,12 +205,12 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="清空题库"
-                        android:textSize="8.4sp"
+                        android:textSize="12sp"
                         android:textColor="@color/purple_700"
                         android:textStyle="bold"
                         android:autoSizeTextType="uniform"
-                        android:autoSizeMinTextSize="12sp"
-                        android:autoSizeMaxTextSize="18sp"
+                        android:autoSizeMinTextSize="8sp"
+                        android:autoSizeMaxTextSize="14sp"
                         android:autoSizeStepGranularity="2sp" />
                 </LinearLayout>
             </LinearLayout>
@@ -247,8 +239,8 @@
                 android:layout_marginBottom="12dp">
 
                 <androidx.appcompat.widget.AppCompatImageView
-                    android:layout_width="8dp"
-                android:layout_height="8dp"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
                     android:src="@drawable/ic_info"
                     android:tint="@color/teal_700"
                     android:layout_marginRight="8dp" />
@@ -257,7 +249,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="使用教程"
-                    android:textSize="18sp"
+                    android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/purple_700" />
             </LinearLayout>
@@ -270,7 +262,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="1. 点击启动悬浮窗按钮打开悬浮窗\n2. 点击悬浮窗中的截图按钮识别题目\n3. 系统会自动搜索题库并显示答案\n4. 可通过导入按钮添加自定义题库"
-                    android:textSize="8.4sp"
+                    android:textSize="12sp"
                     android:textColor="@color/black"
                     android:lineSpacingExtra="4dp"
                     android:alpha="0.8" />
@@ -285,7 +277,7 @@
             android:layout_marginTop="16dp"
             android:layout_marginBottom="16dp"
             android:text="© 2024 忙答之"
-            android:textSize="7.2sp"
+            android:textSize="12sp"
             android:textColor="@android:color/white"
             android:alpha="0.7"
             android:gravity="center" />

@@ -111,7 +111,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="小"
-                        android:textSize="7.2sp"
+                        android:textSize="8sp"
                         android:textColor="@color/black"
                         android:alpha="0.7"
                         android:gravity="left" />
@@ -121,7 +121,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="中"
-                        android:textSize="8.4sp"
+                        android:textSize="10sp"
                         android:textColor="@color/black"
                         android:alpha="0.7"
                         android:gravity="center" />
@@ -131,7 +131,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="大"
-                        android:textSize="9.6sp"
+                        android:textSize="12sp"
                         android:textColor="@color/black"
                         android:alpha="0.7"
                         android:gravity="right" />
@@ -149,7 +149,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="题干字数限制"
-                    android:textSize="16sp"
+                    android:textSize="12sp"
                     android:textColor="@color/black"
                     android:layout_marginBottom="8dp" />
 
@@ -171,7 +171,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="短"
-                        android:textSize="7.2sp"
+                        android:textSize="12sp"
                         android:textColor="@color/black"
                         android:alpha="0.7"
                         android:gravity="left" />
@@ -182,7 +182,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="50字"
-                        android:textSize="8.4sp"
+                        android:textSize="12sp"
                         android:textColor="@color/black"
                         android:alpha="0.7"
                         android:gravity="center" />
@@ -208,8 +208,8 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="截图延迟设置"
-                    android:textSize="16sp"
+                    android:text="首次截图选区延迟设置"
+                    android:textSize="12sp"
                     android:textColor="@color/black"
                     android:layout_marginBottom="8dp" />
 
@@ -242,7 +242,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="200ms"
-                        android:textSize="8.4sp"
+                        android:textSize="12sp"
                         android:textColor="@color/black"
                         android:alpha="0.7"
                         android:gravity="center" />
@@ -284,7 +284,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="软件说明"
-                android:textSize="10.8sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="@color/purple_700"
                 android:layout_marginBottom="16dp" />
@@ -294,7 +294,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="忙答之是一款悬浮窗答题辅助工具，支持自定义悬浮窗透明度和字体大小。\n\n功能特点：\n1. 悬浮窗实时显示题目和答案\n2. 支持调整悬浮窗透明度\n3. 支持调整字体大小\n4. 简洁易用的操作界面"
-                android:textSize="16sp"
+                android:textSize="12sp"
                 android:textColor="@color/black"
                 android:lineSpacingExtra="4dp"
                 android:layout_marginBottom="16dp" />
@@ -304,7 +304,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="关于作者"
-                android:textSize="18sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="@color/purple_700"
                 android:layout_marginBottom="16dp" />
@@ -313,8 +313,8 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="作者：忙答之开发团队\n版本：1.0.0\n联系方式：support@floatingocrquiz.com"
-                android:textSize="16sp"
+                android:text="作者：忙答之开发团队\n版本：1.0.0\n联系方式：support@miniya.com"
+                android:textSize="14sp"
                 android:textColor="@color/black"
                 android:lineSpacingExtra="4dp" />
         </LinearLayout>

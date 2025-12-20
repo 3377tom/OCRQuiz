@@ -278,8 +278,6 @@
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
-
-
         <!-- 底部信息 -->
         <TextView
             android:layout_width="match_parent"

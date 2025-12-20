@@ -27,7 +27,7 @@
         app:cardElevation="4dp"
         app:cardBackgroundColor="@android:color/white"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/toolbar" />
+        app:layout_constraintTop_toBottomOf="@+id/toolbar">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -271,7 +271,7 @@
         app:cardElevation="4dp"
         app:cardBackgroundColor="@android:color/white"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/settings_card" />
+        app:layout_constraintTop_toBottomOf="@+id/settings_card">
 
         <LinearLayout
             android:layout_width="match_parent"

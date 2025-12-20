@@ -385,6 +385,7 @@ public class OCRHelper {
      * @param callback 回调
      */
     private void recognizeTextWithBaiduOCRAsync(Bitmap bitmap, final OcrCallback callback) {
+        String tempFilePath = null;
         try {
             Log.d(TAG, "开始百度OCR异步识别，Bitmap尺寸: " + bitmap.getWidth() + "x" + bitmap.getHeight());
             
@@ -416,7 +417,7 @@ public class OCRHelper {
             params.setLanguageType("CHN_ENG");
             // 移除setRecognizeGranularity方法，该方法不存在
             // 先将Bitmap保存为临时文件
-            String tempFilePath = BitmapUtils.saveBitmapToTempFile(bitmap, context);
+            tempFilePath = BitmapUtils.saveBitmapToTempFile(bitmap, context);
             if (tempFilePath != null) {
                 // 将String转换为File对象
                 File imageFile = new File(tempFilePath);

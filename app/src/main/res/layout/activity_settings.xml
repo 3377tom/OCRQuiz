@@ -366,12 +366,12 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="百度OCR"
-                        android:textSize="12sp"
+                        android:textSize="10sp"
                         android:textColor="@color/black"
                         android:checked="true"
                         android:autoSizeTextType="uniform"
-                        android:autoSizeMinTextSize="10sp"
-                        android:autoSizeMaxTextSize="16sp"
+                        android:autoSizeMinTextSize="8sp"
+                        android:autoSizeMaxTextSize="14sp"
                         android:autoSizeStepGranularity="2sp" />
 
                     <RadioButton
@@ -380,11 +380,11 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="PaddleOCR"
-                        android:textSize="12sp"
+                        android:textSize="10sp"
                         android:textColor="@color/black"
                         android:autoSizeTextType="uniform"
-                        android:autoSizeMinTextSize="10sp"
-                        android:autoSizeMaxTextSize="16sp"
+                        android:autoSizeMinTextSize="8sp"
+                        android:autoSizeMaxTextSize="14sp"
                         android:autoSizeStepGranularity="2sp" />
                 </RadioGroup>
             </LinearLayout>
@@ -419,12 +419,12 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="中文识别"
-                        android:textSize="12sp"
+                        android:textSize="10sp"
                         android:textColor="@color/black"
                         android:checked="true"
                         android:autoSizeTextType="uniform"
-                        android:autoSizeMinTextSize="10sp"
-                        android:autoSizeMaxTextSize="16sp"
+                        android:autoSizeMinTextSize="8sp"
+                        android:autoSizeMaxTextSize="14sp"
                         android:autoSizeStepGranularity="2sp" />
 
                     <RadioButton
@@ -433,11 +433,11 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="英文识别"
-                        android:textSize="12sp"
+                        android:textSize="10sp"
                         android:textColor="@color/black"
                         android:autoSizeTextType="uniform"
-                        android:autoSizeMinTextSize="10sp"
-                        android:autoSizeMaxTextSize="16sp"
+                        android:autoSizeMinTextSize="8sp"
+                        android:autoSizeMaxTextSize="14sp"
                         android:autoSizeStepGranularity="2sp" />
                 </RadioGroup>
             </LinearLayout>

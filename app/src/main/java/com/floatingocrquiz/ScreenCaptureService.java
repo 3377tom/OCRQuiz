@@ -39,6 +39,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutorService;
@@ -293,7 +294,7 @@ public class ScreenCaptureService extends Service {
                         // 发送广播通知浮动窗口服务，截图已完成，清除"正在截图"提示
                         Intent intent = new Intent(FloatingWindowService.ACTION_UPDATE_ANSWER);
                         intent.putExtra(FloatingWindowService.EXTRA_ANSWER, "");
-                        sendBroadcast(intent);
+                        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
                         
                         // 停止虚拟显示（只需要一次截图）
                         releaseVirtualDisplay();
@@ -485,14 +486,14 @@ public class ScreenCaptureService extends Service {
                                 // 通知浮动窗口设置成功
                                 Intent intent = new Intent(FloatingWindowService.ACTION_UPDATE_ANSWER);
                                 intent.putExtra(FloatingWindowService.EXTRA_ANSWER, "默认截图范围已设置");
-                                sendBroadcast(intent);
+                                LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
                                 
                                 isSettingDefaultRange = false;
                             } else {
                                 // 通知浮动窗口设置失败
                                 Intent intent = new Intent(FloatingWindowService.ACTION_UPDATE_ANSWER);
                                 intent.putExtra(FloatingWindowService.EXTRA_ANSWER, "默认截图范围设置失败");
-                                sendBroadcast(intent);
+                                LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
                             }
                         } else {
                             // 正常处理选中的截图区域
@@ -570,7 +571,7 @@ public class ScreenCaptureService extends Service {
                 Log.d(TAG, "准备更新浮动窗口，显示内容: " + displayText);
                 Intent intent = new Intent(FloatingWindowService.ACTION_UPDATE_ANSWER);
                 intent.putExtra(FloatingWindowService.EXTRA_ANSWER, displayText);
-                sendBroadcast(intent);
+                LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
                 Log.d(TAG, "浮动窗口更新广播已发送");
             } catch (Exception e) {
                 Log.e(TAG, "处理选中区域失败: " + e.getMessage());
@@ -578,7 +579,7 @@ public class ScreenCaptureService extends Service {
                 // 发送错误信息
                 Intent intent = new Intent(FloatingWindowService.ACTION_UPDATE_ANSWER);
                 intent.putExtra(FloatingWindowService.EXTRA_ANSWER, "处理图片失败，请重新截图");
-                sendBroadcast(intent);
+                LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
             } finally {
                 // 释放Bitmap资源
                 if (selectedBitmap != null && !selectedBitmap.isRecycled()) {

@@ -3,7 +3,6 @@ package com.floatingocrquiz;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.util.Log;
 
 import com.baidu.ocr.sdk.OCR;
 import com.baidu.ocr.sdk.OnResultListener;
@@ -20,8 +19,7 @@ import java.util.concurrent.TimeUnit;
 
 public class OCRHelper {
 
-    private static final String TAG = "OCRHelper";
-    private static OCRHelper instance;
+        private static OCRHelper instance;
     private Context context;
     private boolean isInitialized = false;
     
@@ -76,9 +74,7 @@ public class OCRHelper {
                 while (!instance.isInitialized && System.currentTimeMillis() - startTime < 5000) {
                     Thread.sleep(100);
                 }
-            } catch (InterruptedException e) {
-                Log.e(TAG, "初始化等待被中断: " + e.getMessage());
-            }
+            } catch (InterruptedException e) {            }
         }
         // 从SharedPreferences读取默认设置
         instance.loadOCRInterfaceSetting();
@@ -132,9 +128,7 @@ public class OCRHelper {
             SharedPreferences prefs = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE);
             String interfaceType = prefs.getString("ocr_interface", "BAIDU_OCR");
             currentOCRInterface = OCRInterfaceType.valueOf(interfaceType);
-        } catch (Exception e) {
-            Log.e(TAG, "加载OCR接口设置失败: " + e.getMessage());
-            currentOCRInterface = OCRInterfaceType.BAIDU_OCR;
+        } catch (Exception e) {            currentOCRInterface = OCRInterfaceType.BAIDU_OCR;
         }
     }
     
@@ -147,9 +141,7 @@ public class OCRHelper {
             SharedPreferences.Editor editor = prefs.edit();
             editor.putString("ocr_interface", currentOCRInterface.name());
             editor.apply();
-        } catch (Exception e) {
-            Log.e(TAG, "保存OCR接口设置失败: " + e.getMessage());
-        }
+        } catch (Exception e) {        }
     }
     
     /**
@@ -160,9 +152,7 @@ public class OCRHelper {
             SharedPreferences prefs = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE);
             String languageType = prefs.getString("ocr_language", "CHINESE");
             currentOCRLanguage = OCRLanguageType.valueOf(languageType);
-        } catch (Exception e) {
-            Log.e(TAG, "加载OCR语言设置失败: " + e.getMessage());
-            currentOCRLanguage = OCRLanguageType.CHINESE;
+        } catch (Exception e) {            currentOCRLanguage = OCRLanguageType.CHINESE;
         }
     }
     
@@ -175,9 +165,7 @@ public class OCRHelper {
             SharedPreferences.Editor editor = prefs.edit();
             editor.putString("ocr_language", currentOCRLanguage.name());
             editor.apply();
-        } catch (Exception e) {
-            Log.e(TAG, "保存OCR语言设置失败: " + e.getMessage());
-        }
+        } catch (Exception e) {        }
     }
     
     /**
@@ -187,18 +175,11 @@ public class OCRHelper {
     private void initBaiduOCR() {
         try {
             // 检查上下文对象是否为空
-            if (context == null) {
-                Log.e(TAG, "上下文对象为空，无法初始化百度OCR SDK");
-                isInitialized = false;
+            if (context == null) {                isInitialized = false;
                 return;
-            }
-            
-            Log.d(TAG, "开始初始化百度OCR SDK");
-            
+            }            
             // 检查OCR类是否可用
-            if (OCR.class == null) {
-                Log.e(TAG, "OCR类不可用，无法初始化百度OCR SDK");
-                isInitialized = false;
+            if (OCR.class == null) {                isInitialized = false;
                 return;
             }
             
@@ -206,15 +187,11 @@ public class OCRHelper {
             OCR ocrInstance = null;
             try {
                 ocrInstance = OCR.getInstance(context);
-            } catch (Exception e) {
-                Log.e(TAG, "获取OCR实例失败: " + e.getMessage());
-                isInitialized = false;
+            } catch (Exception e) {                isInitialized = false;
                 return;
             }
             
-            if (ocrInstance == null) {
-                Log.e(TAG, "OCR实例为空，无法初始化百度OCR SDK");
-                isInitialized = false;
+            if (ocrInstance == null) {                isInitialized = false;
                 return;
             }
             
@@ -224,35 +201,19 @@ public class OCRHelper {
                 @Override
                 public void onResult(AccessToken accessToken) {
                     if (accessToken != null) {
-                        // 初始化成功，accessToken会自动管理，无需手动维护
-                        Log.d(TAG, "百度OCR SDK初始化成功，获取到访问令牌");
-                        Log.d(TAG, "访问令牌有效期: " + accessToken.getExpiresTime() + "毫秒");
-                        isInitialized = true;
-                    } else {
-                        Log.e(TAG, "百度OCR SDK初始化失败：访问令牌为空");
-                        isInitialized = false;
+                        // 初始化成功，accessToken会自动管理，无需手动维护                        isInitialized = true;
+                    } else {                        isInitialized = false;
                     }
                 }
                 
                 @Override
                 public void onError(OCRError error) {
-                    // 初始化失败
-                    Log.e(TAG, "百度OCR SDK初始化失败: " + (error != null ? error.getMessage() : "未知错误"));
-                    if (error != null) {
-                        Log.e(TAG, "错误码: " + error.getErrorCode());
-                        Log.e(TAG, "错误详细信息: " + error.toString());
-                    }
+                    // 初始化失败                    if (error != null) {                    }
                     isInitialized = false;
                 }
             }, "aip-ocr.license", context);
-        } catch (NullPointerException e) {
-            Log.e(TAG, "初始化百度OCR SDK时发生空指针异常: " + e.getMessage());
-            Log.e(TAG, "异常堆栈: " + android.util.Log.getStackTraceString(e));
-            isInitialized = false;
-        } catch (Exception e) {
-            Log.e(TAG, "初始化百度OCR SDK时发生异常: " + e.getMessage());
-            Log.e(TAG, "异常堆栈: " + android.util.Log.getStackTraceString(e));
-            isInitialized = false;
+        } catch (NullPointerException e) {            isInitialized = false;
+        } catch (Exception e) {            isInitialized = false;
         }
     }
     
@@ -266,9 +227,7 @@ public class OCRHelper {
             case BAIDU_OCR:
                 return recognizeTextWithBaiduOCR(bitmap);
             case PADDLE_OCR:
-                // 虚代码调用，返回模拟结果
-                Log.d(TAG, "PaddleOCR接口调用（虚代码），Bitmap尺寸: " + bitmap.getWidth() + "x" + bitmap.getHeight());
-                return "[模拟] PaddleOCR识别结果";
+                // 虚代码调用，返回模拟结果                return "[模拟] PaddleOCR识别结果";
             default:
                 return "[ERROR] 不支持的OCR接口类型";
         }
@@ -281,40 +240,26 @@ public class OCRHelper {
      */
     private String recognizeTextWithBaiduOCR(Bitmap bitmap) {
         String tempFilePath = null;
-        try {
-            Log.d(TAG, "开始百度OCR识别，Bitmap尺寸: " + bitmap.getWidth() + "x" + bitmap.getHeight());
-            
+        try {            
             // 检查上下文对象是否为空
-            if (context == null) {
-                Log.e(TAG, "上下文对象为空，无法进行OCR识别");
-                return "[ERROR] 应用上下文为空";
+            if (context == null) {                return "[ERROR] 应用上下文为空";
             }
             
             // 检查OCR SDK实例是否为空
-            if (OCR.getInstance(context) == null) {
-                Log.e(TAG, "OCR SDK实例为空，无法进行OCR识别");
-                return "[ERROR] OCR SDK实例为空";
+            if (OCR.getInstance(context) == null) {                return "[ERROR] OCR SDK实例为空";
             }
             
             // 等待OCR SDK初始化完成，最多等待5秒
-            if (!isInitialized) {
-                Log.d(TAG, "百度OCR SDK尚未初始化完成，等待初始化...");
-                long startTime = System.currentTimeMillis();
+            if (!isInitialized) {                long startTime = System.currentTimeMillis();
                 while (!isInitialized && System.currentTimeMillis() - startTime < 5000) {
                     Thread.sleep(100);
                 }
-                if (!isInitialized) {
-                    Log.e(TAG, "百度OCR SDK初始化超时");
-                    return "[ERROR] OCR SDK初始化超时";
-                } else {
-                    Log.d(TAG, "百度OCR SDK初始化完成");
-                }
+                if (!isInitialized) {                    return "[ERROR] OCR SDK初始化超时";
+                } else {                }
             }
             
             // 再次检查初始化状态，确保SDK已完全初始化
-            if (!isInitialized) {
-                Log.e(TAG, "百度OCR SDK初始化未完成，无法进行识别");
-                return "[ERROR] OCR SDK初始化未完成";
+            if (!isInitialized) {                return "[ERROR] OCR SDK初始化未完成";
             }
             
             // 构建通用文字识别参数
@@ -336,14 +281,10 @@ public class OCRHelper {
             
             // 先将Bitmap保存为临时文件
             tempFilePath = BitmapUtils.saveBitmapToTempFile(bitmap, context);
-            if (tempFilePath != null) {
-                Log.d(TAG, "临时文件保存成功: " + tempFilePath);
-                // 将String转换为File对象
+            if (tempFilePath != null) {                // 将String转换为File对象
                 File imageFile = new File(tempFilePath);
                 params.setImageFile(imageFile);
-            } else {
-                Log.e(TAG, "无法保存临时文件");
-                return "[ERROR] 无法保存临时文件";
+            } else {                return "[ERROR] 无法保存临时文件";
             }
             
             // 移除同步调用，使用异步方法
@@ -356,52 +297,28 @@ public class OCRHelper {
                 @Override
                 public void onResult(GeneralResult result) {
                     try {
-                        if (result != null) {
-                            Log.d(TAG, "百度OCR识别成功，结果不为null");
-                            
-                            if (result.getWordList() != null) {
-                                Log.d(TAG, "识别到的单词数量: " + result.getWordList().size());
-                                resultText[0] = formatResult(result);
-                                Log.d(TAG, "格式化后的识别结果: " + resultText[0]);
-                                
+                        if (result != null) {                            
+                            if (result.getWordList() != null) {                                resultText[0] = formatResult(result);                                
                                 // 检查识别结果是否为空
-                                if (resultText[0].isEmpty()) {
-                                    Log.e(TAG, "百度OCR识别结果为空");
-                                    resultText[0] = "[ERROR] 识别结果为空";
+                                if (resultText[0].isEmpty()) {                                    resultText[0] = "[ERROR] 识别结果为空";
                                 }
-                            } else {
-                                Log.e(TAG, "百度OCR识别结果的WordList为空");
-                                resultText[0] = "[ERROR] 识别结果为空";
+                            } else {                                resultText[0] = "[ERROR] 识别结果为空";
                             }
-                        } else {
-                            Log.e(TAG, "百度OCR识别结果为空");
-                            resultText[0] = "[ERROR] 识别结果为空";
+                        } else {                            resultText[0] = "[ERROR] 识别结果为空";
                         }
                     } finally {
                         // 识别完成后删除临时文件
-                        if (finalTempFilePath != null) {
-                            Log.d(TAG, "准备删除临时文件: " + finalTempFilePath);
-                            BitmapUtils.deleteTempFile(finalTempFilePath);
-                            Log.d(TAG, "临时文件删除成功");
-                        }
+                        if (finalTempFilePath != null) {                            BitmapUtils.deleteTempFile(finalTempFilePath);                        }
                         latch.countDown();
                     }
                 }
                 
                 @Override
                 public void onError(OCRError error) {
-                    try {
-                        Log.e(TAG, "百度OCR识别失败: " + error.getMessage());
-                        Log.e(TAG, "错误码: " + error.getErrorCode());
-                        Log.e(TAG, "错误详细信息: " + error.toString());
-                        resultText[0] = "[ERROR] 识别失败: " + error.getMessage();
+                    try {                        resultText[0] = "[ERROR] 识别失败: " + error.getMessage();
                     } finally {
                         // 识别完成后删除临时文件
-                        if (finalTempFilePath != null) {
-                            Log.d(TAG, "准备删除临时文件: " + finalTempFilePath);
-                            BitmapUtils.deleteTempFile(finalTempFilePath);
-                            Log.d(TAG, "临时文件删除成功");
-                        }
+                        if (finalTempFilePath != null) {                            BitmapUtils.deleteTempFile(finalTempFilePath);                        }
                         latch.countDown();
                     }
                 }
@@ -409,30 +326,18 @@ public class OCRHelper {
             
             // 等待异步调用完成
             boolean waitResult = latch.await(10, TimeUnit.SECONDS);
-            if (!waitResult) {
-                Log.e(TAG, "百度OCR识别超时");
-                // 超时也要删除临时文件
+            if (!waitResult) {                // 超时也要删除临时文件
                 if (tempFilePath != null) {
                     BitmapUtils.deleteTempFile(tempFilePath);
                 }
                 return "[ERROR] 识别超时";
-            }
-            
-            Log.d(TAG, "百度OCR识别完成，返回结果长度: " + resultText[0].length());
-            Log.d(TAG, "返回的识别结果: " + resultText[0]);
-            return resultText[0];
-        } catch (NullPointerException e) {
-            Log.e(TAG, "百度OCR识别发生空指针异常，可能是SDK内部错误: " + e.getMessage());
-            Log.e(TAG, "异常堆栈: " + android.util.Log.getStackTraceString(e));
-            // 发生异常也要删除临时文件
+            }            return resultText[0];
+        } catch (NullPointerException e) {            // 发生异常也要删除临时文件
             if (tempFilePath != null) {
                 BitmapUtils.deleteTempFile(tempFilePath);
             }
             return "[ERROR] OCR服务内部错误，请重试";
-        } catch (Exception e) {
-            Log.e(TAG, "百度OCR识别失败: " + e.getMessage());
-            Log.e(TAG, "异常堆栈: " + android.util.Log.getStackTraceString(e));
-            // 发生异常也要删除临时文件
+        } catch (Exception e) {            // 发生异常也要删除临时文件
             if (tempFilePath != null) {
                 BitmapUtils.deleteTempFile(tempFilePath);
             }
@@ -451,9 +356,7 @@ public class OCRHelper {
                 recognizeTextWithBaiduOCRAsync(bitmap, callback);
                 break;
             case PADDLE_OCR:
-                // 虚代码调用，返回模拟结果
-                Log.d(TAG, "PaddleOCR异步接口调用（虚代码），Bitmap尺寸: " + bitmap.getWidth() + "x" + bitmap.getHeight());
-                callback.onOcrComplete("[模拟] PaddleOCR异步识别结果");
+                // 虚代码调用，返回模拟结果                callback.onOcrComplete("[模拟] PaddleOCR异步识别结果");
                 break;
             default:
                 callback.onOcrComplete("[ERROR] 不支持的OCR接口类型");
@@ -468,27 +371,19 @@ public class OCRHelper {
      */
     private void recognizeTextWithBaiduOCRAsync(Bitmap bitmap, final OcrCallback callback) {
         String tempFilePath = null;
-        try {
-            Log.d(TAG, "开始百度OCR异步识别，Bitmap尺寸: " + bitmap.getWidth() + "x" + bitmap.getHeight());
-            
+        try {            
             // 检查上下文对象是否为空
-            if (context == null) {
-                Log.e(TAG, "上下文对象为空，无法进行OCR识别");
-                callback.onOcrComplete("[ERROR] 应用上下文为空");
+            if (context == null) {                callback.onOcrComplete("[ERROR] 应用上下文为空");
                 return;
             }
             
             // 检查OCR SDK实例是否为空
-            if (OCR.getInstance(context) == null) {
-                Log.e(TAG, "OCR SDK实例为空，无法进行OCR识别");
-                callback.onOcrComplete("[ERROR] OCR SDK实例为空");
+            if (OCR.getInstance(context) == null) {                callback.onOcrComplete("[ERROR] OCR SDK实例为空");
                 return;
             }
             
             // 检查初始化状态
-            if (!isInitialized) {
-                Log.e(TAG, "百度OCR SDK未初始化完成，无法进行识别");
-                callback.onOcrComplete("[ERROR] OCR SDK未初始化完成");
+            if (!isInitialized) {                callback.onOcrComplete("[ERROR] OCR SDK未初始化完成");
                 return;
             }
             
@@ -515,9 +410,7 @@ public class OCRHelper {
                 // 将String转换为File对象
                 File imageFile = new File(tempFilePath);
                 params.setImageFile(imageFile);
-            } else {
-                Log.e(TAG, "无法保存临时文件");
-                callback.onOcrComplete("[ERROR] 无法保存临时文件");
+            } else {                callback.onOcrComplete("[ERROR] 无法保存临时文件");
                 return;
             }
             
@@ -529,54 +422,33 @@ public class OCRHelper {
                     try {
                         if (result != null && result.getWordList() != null) {
                             String formattedResult = formatResult(result);
-                            if (formattedResult.isEmpty()) {
-                                Log.e(TAG, "百度OCR识别结果为空");
-                                callback.onOcrComplete("[ERROR] 识别结果为空");
+                            if (formattedResult.isEmpty()) {                                callback.onOcrComplete("[ERROR] 识别结果为空");
                             } else {
                                 callback.onOcrComplete(formattedResult);
                             }
-                        } else {
-                            Log.e(TAG, "百度OCR识别结果为空");
-                            callback.onOcrComplete("[ERROR] 识别结果为空");
+                        } else {                            callback.onOcrComplete("[ERROR] 识别结果为空");
                         }
                     } finally {
                         // 识别完成后删除临时文件
-                        if (finalTempFilePath != null) {
-                            Log.d(TAG, "准备删除临时文件: " + finalTempFilePath);
-                            BitmapUtils.deleteTempFile(finalTempFilePath);
-                            Log.d(TAG, "临时文件删除成功");
-                        }
+                        if (finalTempFilePath != null) {                            BitmapUtils.deleteTempFile(finalTempFilePath);                        }
                     }
                 }
                 
                 @Override
                 public void onError(OCRError error) {
-                    try {
-                        Log.e(TAG, "百度OCR识别失败: " + error.getMessage());
-                        Log.e(TAG, "错误码: " + error.getErrorCode());
-                        callback.onOcrComplete("");
+                    try {                        callback.onOcrComplete("");
                     } finally {
                         // 识别完成后删除临时文件
-                        if (finalTempFilePath != null) {
-                            Log.d(TAG, "准备删除临时文件: " + finalTempFilePath);
-                            BitmapUtils.deleteTempFile(finalTempFilePath);
-                            Log.d(TAG, "临时文件删除成功");
-                        }
+                        if (finalTempFilePath != null) {                            BitmapUtils.deleteTempFile(finalTempFilePath);                        }
                     }
                 }
             });
-        } catch (NullPointerException e) {
-            Log.e(TAG, "百度OCR识别发生空指针异常，可能是SDK内部getAccessToken()方法错误: " + e.getMessage());
-            Log.e(TAG, "异常堆栈: " + android.util.Log.getStackTraceString(e));
-            // 发生异常也要删除临时文件
+        } catch (NullPointerException e) {            // 发生异常也要删除临时文件
             if (tempFilePath != null) {
                 BitmapUtils.deleteTempFile(tempFilePath);
             }
             callback.onOcrComplete("[ERROR] OCR服务内部错误，请重试");
-        } catch (Exception e) {
-            Log.e(TAG, "百度OCR识别失败: " + e.getMessage());
-            Log.e(TAG, "异常堆栈: " + android.util.Log.getStackTraceString(e));
-            // 发生异常也要删除临时文件
+        } catch (Exception e) {            // 发生异常也要删除临时文件
             if (tempFilePath != null) {
                 BitmapUtils.deleteTempFile(tempFilePath);
             }
@@ -623,9 +495,7 @@ public class OCRHelper {
             if (limit > 0 && text.length() > limit) {
                 return text.substring(0, limit) + "...";
             }
-        } catch (Exception e) {
-            Log.e(TAG, "读取题干字数限制设置失败: " + e.getMessage());
-        }
+        } catch (Exception e) {        }
         
         return text;
     }
@@ -637,18 +507,10 @@ public class OCRHelper {
         try {
             // 释放百度OCR资源
             if (context != null && OCR.getInstance(context) != null) {
-                OCR.getInstance(context).release();
-                Log.d(TAG, "百度OCR资源释放成功");
-            }
+                OCR.getInstance(context).release();            }
             
             isInitialized = false;
-        } catch (NullPointerException e) {
-            Log.e(TAG, "释放OCR资源时发生空指针异常: " + e.getMessage());
-            Log.e(TAG, "异常堆栈: " + android.util.Log.getStackTraceString(e));
-        } catch (Exception e) {
-            Log.e(TAG, "释放OCR资源失败: " + e.getMessage());
-            Log.e(TAG, "异常堆栈: " + android.util.Log.getStackTraceString(e));
-        }
+        } catch (NullPointerException e) {        } catch (Exception e) {        }
     }
     
     /**

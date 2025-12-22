@@ -43,6 +43,7 @@ import android.text.style.CharacterStyle;
 import android.text.style.UpdateAppearance;
 
 import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 public class FloatingWindowService extends Service {
 
@@ -95,7 +96,7 @@ public class FloatingWindowService extends Service {
         // 初始化防抖handler
         colorUpdateHandler = new Handler();
         
-        // 注册广播接收器
+        // 注册广播接收器（使用LocalBroadcastManager增强安全性）
         answerReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -106,7 +107,7 @@ public class FloatingWindowService extends Service {
             }
         };
         IntentFilter filter = new IntentFilter(ACTION_UPDATE_ANSWER);
-        registerReceiver(answerReceiver, filter);
+        LocalBroadcastManager.getInstance(this).registerReceiver(answerReceiver, filter);
     }
 
     @Override
@@ -478,23 +479,40 @@ public class FloatingWindowService extends Service {
     private int calculateAverageColor(Bitmap bitmap) {
         int width = bitmap.getWidth();
         int height = bitmap.getHeight();
-        int totalPixels = width * height;
+        
+        // 自适应采样：根据图像大小调整采样点数，平衡性能与敏感度
+        int maxSamples = 600; // 采样点数量上限，确保敏感度
+        int minStep = 1; // 最小采样步长
+        
+        // 计算采样步长，确保采样点均匀分布
+        int sampleStep = Math.max(minStep, Math.min(
+            width / (int)Math.sqrt(maxSamples / 2),
+            height / (int)Math.sqrt(maxSamples / 2)
+        ));
+        
         long redSum = 0;
         long greenSum = 0;
         long blueSum = 0;
+        int sampledPixels = 0;
         
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
+        // 均匀分布采样，覆盖整个图像区域
+        for (int x = 0; x < width; x += sampleStep) {
+            for (int y = 0; y < height; y += sampleStep) {
                 int pixel = bitmap.getPixel(x, y);
                 redSum += Color.red(pixel);
                 greenSum += Color.green(pixel);
                 blueSum += Color.blue(pixel);
+                sampledPixels++;
             }
         }
         
-        int avgRed = (int) (redSum / totalPixels);
-        int avgGreen = (int) (greenSum / totalPixels);
-        int avgBlue = (int) (blueSum / totalPixels);
+        if (sampledPixels == 0) {
+            return Color.BLACK;
+        }
+        
+        int avgRed = (int) (redSum / sampledPixels);
+        int avgGreen = (int) (greenSum / sampledPixels);
+        int avgBlue = (int) (blueSum / sampledPixels);
         
         return Color.rgb(avgRed, avgGreen, avgBlue);
     }
@@ -517,21 +535,41 @@ public class FloatingWindowService extends Service {
             
             int pixelStride = plane.getPixelStride();
             int rowStride = plane.getRowStride();
-            int rowPadding = rowStride - pixelStride * image.getWidth();
+            int imageWidth = image.getWidth();
+            int imageHeight = image.getHeight();
             
-            // 创建Bitmap
+            // 直接创建正确大小的Bitmap
             Bitmap bitmap = Bitmap.createBitmap(
-                    image.getWidth() + rowPadding / pixelStride,
-                    image.getHeight(),
+                    imageWidth,
+                    imageHeight,
                     Bitmap.Config.ARGB_8888);
-            bitmap.copyPixelsFromBuffer(buffer);
             
-            // 裁剪到实际大小
-            bitmap = Bitmap.createBitmap(
-                    bitmap,
-                    0, 0,
-                    image.getWidth(),
-                    image.getHeight());
+            // 获取Bitmap的像素数组
+            int[] pixels = new int[imageWidth * imageHeight];
+            int pixelIndex = 0;
+            
+            // 重置缓冲区位置
+            buffer.rewind();
+            
+            // 逐行复制像素数据
+            for (int row = 0; row < imageHeight; row++) {
+                for (int col = 0; col < imageWidth; col++) {
+                    // 计算缓冲区中的位置
+                    int bufferPos = row * rowStride + col * pixelStride;
+                    
+                    // 从缓冲区读取ARGB值
+                    int a = (pixelStride > 3) ? buffer.get(bufferPos + 3) & 0xff : 0xff;
+                    int r = buffer.get(bufferPos + 0) & 0xff;
+                    int g = buffer.get(bufferPos + 1) & 0xff;
+                    int b = buffer.get(bufferPos + 2) & 0xff;
+                    
+                    // 存储像素值
+                    pixels[pixelIndex++] = (a << 24) | (r << 16) | (g << 8) | b;
+                }
+            }
+            
+            // 将像素数据设置到Bitmap
+            bitmap.setPixels(pixels, 0, imageWidth, 0, 0, imageWidth, imageHeight);
             
             return bitmap;
         } catch (Exception e) {
@@ -546,8 +584,15 @@ public class FloatingWindowService extends Service {
                 // 清除"正在截图"提示
                 answerTextView.setText("");
             } else {
+                // 输入数据验证：限制文本长度，避免过长文本导致性能问题
+                final int MAX_TEXT_LENGTH = 5000;
+                String safeAnswer = answer;
+                if (answer.length() > MAX_TEXT_LENGTH) {
+                    safeAnswer = answer.substring(0, MAX_TEXT_LENGTH) + "...";
+                    Log.w(TAG, "答案文本过长，已截断");
+                }
                 // 直接使用答案文本，不再添加前缀，因为formatAnswer方法已经包含了完整内容
-                answerTextView.setText(formatHighlightedText(answer), TextView.BufferType.SPANNABLE);
+                answerTextView.setText(formatHighlightedText(safeAnswer), TextView.BufferType.SPANNABLE);
             }
         }
         
@@ -578,27 +623,27 @@ public class FloatingWindowService extends Service {
         SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(text);
         
         // 查找所有[CORRECT]标签，不再使用闭标签
-        int startIndex = 0;
-        while (startIndex < spannableStringBuilder.length()) {
-            String tempString = spannableStringBuilder.toString();
-            int correctStart = tempString.indexOf("[CORRECT]", startIndex);
+        final String CORRECT_TAG = "[CORRECT]";
+        final int TAG_LENGTH = CORRECT_TAG.length();
+        int currentPosition = 0;
+        
+        while (currentPosition < spannableStringBuilder.length()) {
+            int correctStart = spannableStringBuilder.indexOf(CORRECT_TAG, currentPosition);
             if (correctStart == -1) {
                 break;
             }
             
             // 计算标签结束位置
-            int tagEnd = correctStart + "[CORRECT]".length();
+            int tagEnd = correctStart + TAG_LENGTH;
             
             // 查找当前选项的结束位置（换行符或字符串结束）
-            tempString = spannableStringBuilder.toString();
-            int optionEnd = tempString.indexOf("\n", tagEnd);
+            int optionEnd = spannableStringBuilder.indexOf("\n", tagEnd);
             if (optionEnd == -1) {
                 optionEnd = spannableStringBuilder.length();
             }
             
             // 查找选项标签的起始位置（选项编号，如A. B. 等）
-            tempString = spannableStringBuilder.toString();
-            int optionStart = tempString.lastIndexOf("\n", correctStart);
+            int optionStart = spannableStringBuilder.lastIndexOf("\n", correctStart);
             if (optionStart == -1) {
                 optionStart = 0; // 如果是第一行，则从字符串开始位置
             } else {
@@ -608,8 +653,9 @@ public class FloatingWindowService extends Service {
             // 真正删除[CORRECT]标签文本，而不是仅仅设置为透明
             spannableStringBuilder.delete(correctStart, tagEnd);
             
-            // 调整选项结束位置，因为我们删除了[CORRECT]标签
-            optionEnd -= (tagEnd - correctStart);
+            // 调整选项结束位置和下一个搜索位置，因为我们删除了[CORRECT]标签
+            int tagRemovalDelta = tagEnd - correctStart;
+            optionEnd -= tagRemovalDelta;
             
             // 设置红色文字颜色（从选项编号开始到选项结束，包括选项编号和内容）
             spannableStringBuilder.setSpan(
@@ -627,8 +673,8 @@ public class FloatingWindowService extends Service {
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             );
             
-            // 继续查找下一个标签，由于删除了标签，需要调整startIndex
-            startIndex = optionEnd;
+            // 继续查找下一个标签
+            currentPosition = optionEnd;
         }
         
         return new SpannableString(spannableStringBuilder);
@@ -661,12 +707,30 @@ public class FloatingWindowService extends Service {
         super.onDestroy();
         // 取消注册广播接收器
         if (answerReceiver != null) {
-            unregisterReceiver(answerReceiver);
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(answerReceiver);
+            answerReceiver = null;
         }
+        // 清理Handler回调和延迟任务，避免内存泄漏
+        if (colorUpdateHandler != null) {
+            colorUpdateHandler.removeCallbacksAndMessages(null);
+            colorUpdateHandler = null;
+        }
+        // 清理浮动窗口视图
         if (isWindowShowing && floatingView != null && windowManager != null) {
-            windowManager.removeView(floatingView);
-            isWindowShowing = false;
+            try {
+                windowManager.removeView(floatingView);
+                isWindowShowing = false;
+            } catch (IllegalArgumentException e) {
+                Log.e(TAG, "移除浮动窗口视图失败: " + e.getMessage());
+            }
         }
+        // 释放资源引用
+        floatingView = null;
+        windowManager = null;
+        answerTextView = null;
+        captureButton = null;
+        settingsButton = null;
+        closeButton = null;
     }
 
     @Override

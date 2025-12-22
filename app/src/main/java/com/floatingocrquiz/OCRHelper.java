@@ -3,8 +3,6 @@ package com.floatingocrquiz;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.os.Environment;
 import android.util.Log;
 
 import com.baidu.ocr.sdk.OCR;
@@ -15,13 +13,7 @@ import com.baidu.ocr.sdk.model.GeneralBasicParams;
 import com.baidu.ocr.sdk.model.GeneralResult;
 import com.baidu.ocr.sdk.model.WordSimple;
 
-// PaddleOCR相关导入
-
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -50,17 +42,6 @@ public class OCRHelper {
     
     // 默认使用中文识别
     private OCRLanguageType currentOCRLanguage = OCRLanguageType.CHINESE;
-    // 英文识别模型路径
-    private static final String REC_ENGLISH_MODEL_NAME = "rec_english_common_infer";
-    
-    // PaddleOCR相关变量
-    private OCRPredictorNative paddleOCRPredictor = null;
-    private static final String PADDLE_OCR_MODEL_DIR = "paddleocr";
-    // 使用目录结构的模型名称，与当前assets中的模型结构一致
-    private static final String DET_MODEL_NAME = "det_chinese_db_infer";
-    private static final String REC_MODEL_NAME = "rec_chinese_common_infer";
-    private static final String CLS_MODEL_NAME = "cls_chinese_infer";
-    private static final String LABEL_FILE_NAME = "ppocr_keys_v1.txt";
     
     /**
      * 私有构造函数，防止外部实例化
@@ -73,109 +54,12 @@ public class OCRHelper {
         if (android.os.Looper.myLooper() == android.os.Looper.getMainLooper()) {
             // 在主线程，直接初始化百度OCR
             initBaiduOCR();
-            // 初始化PaddleOCR
-            initPaddleOCR();
         } else {
             // 不在主线程，切换到主线程初始化百度OCR SDK
             new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
                 initBaiduOCR();
-                // 初始化PaddleOCR
-                initPaddleOCR();
             });
         }
-    }
-    
-    /**
-     * 初始化PaddleOCR
-     */
-    private void initPaddleOCR() {
-        try {
-            Log.d(TAG, "开始初始化PaddleOCR，语言: " + currentOCRLanguage.name());
-            
-            // 检查上下文对象是否为空
-            if (context == null) {
-                Log.e(TAG, "上下文对象为空，无法初始化PaddleOCR");
-                return;
-            }
-            
-            // 关闭之前的预测器（如果存在）
-            if (paddleOCRPredictor != null) {
-                try {
-                    paddleOCRPredictor.destroy();
-                    paddleOCRPredictor = null;
-                    Log.d(TAG, "已关闭之前的PaddleOCR预测器");
-                } catch (Exception e) {
-                    Log.e(TAG, "关闭PaddleOCR预测器失败: " + e.getMessage());
-                }
-            }
-            
-            // 检查模型文件是否存在，不存在则复制
-        String modelPath = context.getCacheDir() + File.separator + PADDLE_OCR_MODEL_DIR;
-        
-        // 实际的模型文件路径（与assets中的目录结构一致）
-        String detModelPath = modelPath + File.separator + DET_MODEL_NAME + File.separator + "model.nb";
-        String recModelPath = modelPath + File.separator + 
-            (currentOCRLanguage == OCRLanguageType.CHINESE ? REC_MODEL_NAME : REC_ENGLISH_MODEL_NAME) + 
-            File.separator + "model.nb";
-        String clsModelPath = modelPath + File.separator + CLS_MODEL_NAME + File.separator + "model.nb";
-        
-        File detModelFile = new File(detModelPath);
-        File recModelFile = new File(recModelPath);
-        File clsModelFile = new File(clsModelPath);
-        
-        if (!detModelFile.exists() || !recModelFile.exists() || !clsModelFile.exists()) {
-            Log.d(TAG, "PaddleOCR模型文件不存在，尝试从assets复制");
-            try {
-                copyPaddleOCRModelsFromAssets();
-            } catch (Exception e) {
-                Log.e(TAG, "复制PaddleOCR模型文件失败: " + e.getMessage());
-                return;
-            }
-        }
-        
-        // 初始化PaddleOCR预测器
-        OCRPredictorNative.Config config = new OCRPredictorNative.Config();
-        config.useOpencl = 0; // 不使用OpenCL
-        config.cpuThreadNum = 4;
-        config.cpuPower = "LITE_POWER_HIGH";
-        config.detModelFilename = detModelPath;
-        config.recModelFilename = recModelPath;
-        config.clsModelFilename = clsModelPath;
-            
-            try {
-                paddleOCRPredictor = new OCRPredictorNative(config);
-                Log.d(TAG, "PaddleOCR预测器初始化成功");
-            } catch (Exception e) {
-                Log.e(TAG, "PaddleOCR预测器初始化失败: " + e.getMessage());
-                paddleOCRPredictor = null;
-            }
-            
-        } catch (NullPointerException e) {
-            Log.e(TAG, "PaddleOCR初始化发生空指针异常: " + e.getMessage());
-            Log.e(TAG, "异常堆栈: " + android.util.Log.getStackTraceString(e));
-        } catch (Exception e) {
-            Log.e(TAG, "PaddleOCR初始化失败: " + e.getMessage());
-            Log.e(TAG, "异常堆栈: " + android.util.Log.getStackTraceString(e));
-        }
-    }
-    
-    /**
-     * 从assets复制PaddleOCR模型文件到应用目录
-     */
-    private void copyPaddleOCRModelsFromAssets() throws IOException {
-        Log.d(TAG, "开始从assets复制PaddleOCR模型文件");
-        
-        // 获取目标目录
-        String destDirPath = context.getCacheDir() + File.separator + PADDLE_OCR_MODEL_DIR;
-        File destDir = new File(destDirPath);
-        if (!destDir.exists()) {
-            destDir.mkdirs();
-        }
-        
-        // 复制模型目录下的所有文件
-        Utils.copyDirectoryFromAssets(context, PADDLE_OCR_MODEL_DIR, destDirPath);
-        
-        Log.d(TAG, "PaddleOCR模型文件复制完成");
     }
     
     /**
@@ -237,17 +121,6 @@ public class OCRHelper {
             currentOCRLanguage = languageType;
             // 保存设置到SharedPreferences
             saveOCRLanguageSetting();
-            // 重新初始化PaddleOCR以切换模型
-            if (paddleOCRPredictor != null) {
-                try {
-                    paddleOCRPredictor.destroy();
-                    paddleOCRPredictor = null;
-                    Log.d(TAG, "已关闭之前的PaddleOCR预测器");
-                } catch (Exception e) {
-                    Log.e(TAG, "关闭PaddleOCR预测器失败: " + e.getMessage());
-                }
-            }
-            initPaddleOCR();
         }
     }
     
@@ -393,7 +266,9 @@ public class OCRHelper {
             case BAIDU_OCR:
                 return recognizeTextWithBaiduOCR(bitmap);
             case PADDLE_OCR:
-                return recognizeTextWithPaddleOCR(bitmap);
+                // 虚代码调用，返回模拟结果
+                Log.d(TAG, "PaddleOCR接口调用（虚代码），Bitmap尺寸: " + bitmap.getWidth() + "x" + bitmap.getHeight());
+                return "[模拟] PaddleOCR识别结果";
             default:
                 return "[ERROR] 不支持的OCR接口类型";
         }
@@ -445,8 +320,19 @@ public class OCRHelper {
             // 构建通用文字识别参数
             GeneralBasicParams params = new GeneralBasicParams();
             params.setDetectDirection(true);
-            // LANGUAGE_TYPE_CHN_ENG常量不存在，直接使用字符串值
-            params.setLanguageType("CHN_ENG");
+            
+            // 根据当前设置的语言类型选择对应的OCR语言
+            String languageType;
+            switch (currentOCRLanguage) {
+                case ENGLISH:
+                    languageType = "ENG"; // 英文
+                    break;
+                case CHINESE:
+                default:
+                    languageType = "CHN_ENG"; // 中英文混合
+                    break;
+            }
+            params.setLanguageType(languageType);
             
             // 先将Bitmap保存为临时文件
             tempFilePath = BitmapUtils.saveBitmapToTempFile(bitmap, context);
@@ -555,42 +441,6 @@ public class OCRHelper {
     }
     
     /**
-     * 使用PaddleOCR识别图片中的文字（同步方法）
-     * @param bitmap 图片
-     * @return 识别结果
-     */
-    private String recognizeTextWithPaddleOCR(Bitmap bitmap) {
-        try {
-            Log.d(TAG, "开始PaddleOCR识别，Bitmap尺寸: " + bitmap.getWidth() + "x" + bitmap.getHeight());
-            
-            // 检查预测器是否已经初始化
-            if (paddleOCRPredictor == null) {
-                Log.e(TAG, "PaddleOCR预测器尚未初始化，无法执行识别");
-                return "[ERROR] PaddleOCR预测器未初始化，请检查模型文件是否正确";
-            }
-            
-            // 执行OCR识别
-            int detLongSize = 960; // 检测模型的最大边长
-            int run_det = 1; // 启用检测
-            int run_cls = 1; // 启用方向分类
-            int run_rec = 1; // 启用识别
-            
-            ArrayList<OcrResultModel> results = paddleOCRPredictor.runImage(bitmap, detLongSize, run_det, run_cls, run_rec);
-            
-            // 格式化识别结果
-            return formatPaddleOCRResult(results);
-        } catch (NullPointerException e) {
-            Log.e(TAG, "PaddleOCR识别发生空指针异常: " + e.getMessage());
-            Log.e(TAG, "异常堆栈: " + android.util.Log.getStackTraceString(e));
-            return "[ERROR] PaddleOCR内部错误，请重试";
-        } catch (Exception e) {
-            Log.e(TAG, "PaddleOCR识别失败: " + e.getMessage());
-            Log.e(TAG, "异常堆栈: " + android.util.Log.getStackTraceString(e));
-            return "[ERROR] PaddleOCR识别失败: " + e.getMessage();
-        }
-    }
-    
-    /**
      * 识别图片中的文字（异步方法）
      * @param bitmap 图片
      * @param callback 回调
@@ -601,7 +451,9 @@ public class OCRHelper {
                 recognizeTextWithBaiduOCRAsync(bitmap, callback);
                 break;
             case PADDLE_OCR:
-                recognizeTextWithPaddleOCRAsync(bitmap, callback);
+                // 虚代码调用，返回模拟结果
+                Log.d(TAG, "PaddleOCR异步接口调用（虚代码），Bitmap尺寸: " + bitmap.getWidth() + "x" + bitmap.getHeight());
+                callback.onOcrComplete("[模拟] PaddleOCR异步识别结果");
                 break;
             default:
                 callback.onOcrComplete("[ERROR] 不支持的OCR接口类型");
@@ -643,8 +495,19 @@ public class OCRHelper {
             // 构建通用文字识别参数
             GeneralBasicParams params = new GeneralBasicParams();
             params.setDetectDirection(true);
-            // LANGUAGE_TYPE_CHN_ENG常量不存在，直接使用字符串值
-            params.setLanguageType("CHN_ENG");
+            
+            // 根据当前设置的语言类型选择对应的OCR语言
+            String languageType;
+            switch (currentOCRLanguage) {
+                case ENGLISH:
+                    languageType = "ENG"; // 英文
+                    break;
+                case CHINESE:
+                default:
+                    languageType = "CHN_ENG"; // 中英文混合
+                    break;
+            }
+            params.setLanguageType(languageType);
             // 移除setRecognizeGranularity方法，该方法不存在
             // 先将Bitmap保存为临时文件
             tempFilePath = BitmapUtils.saveBitmapToTempFile(bitmap, context);
@@ -719,47 +582,6 @@ public class OCRHelper {
             }
             callback.onOcrComplete("[ERROR] 识别失败: " + e.getMessage());
         }
-    }
-    
-    /**
-     * 使用PaddleOCR识别图片中的文字（异步方法）
-     * @param bitmap 图片
-     * @param callback 回调
-     */
-    private void recognizeTextWithPaddleOCRAsync(Bitmap bitmap, final OcrCallback callback) {
-        // 在子线程中执行识别
-        new Thread(() -> {
-            try {
-                Log.d(TAG, "开始PaddleOCR异步识别，Bitmap尺寸: " + bitmap.getWidth() + "x" + bitmap.getHeight());
-                
-                // 检查预测器是否已经初始化
-                if (paddleOCRPredictor == null) {
-                    Log.e(TAG, "PaddleOCR预测器尚未初始化，无法执行识别");
-                    callback.onOcrComplete("[ERROR] PaddleOCR预测器未初始化，请检查模型文件是否正确");
-                    return;
-                }
-                
-                // 执行OCR识别
-                int detLongSize = 960; // 检测模型的最大边长
-                int run_det = 1; // 启用检测
-                int run_cls = 1; // 启用方向分类
-                int run_rec = 1; // 启用识别
-                
-                ArrayList<OcrResultModel> results = paddleOCRPredictor.runImage(bitmap, detLongSize, run_det, run_cls, run_rec);
-                
-                // 格式化识别结果
-                String formattedResult = formatPaddleOCRResult(results);
-                callback.onOcrComplete(formattedResult);
-            } catch (NullPointerException e) {
-                Log.e(TAG, "PaddleOCR识别发生空指针异常: " + e.getMessage());
-                Log.e(TAG, "异常堆栈: " + android.util.Log.getStackTraceString(e));
-                callback.onOcrComplete("[ERROR] PaddleOCR内部错误，请重试");
-            } catch (Exception e) {
-                Log.e(TAG, "PaddleOCR识别失败: " + e.getMessage());
-                Log.e(TAG, "异常堆栈: " + android.util.Log.getStackTraceString(e));
-                callback.onOcrComplete("[ERROR] PaddleOCR识别失败: " + e.getMessage());
-            }
-        }).start();
     }
     
     /**
@@ -840,18 +662,6 @@ public class OCRHelper {
             if (context != null && OCR.getInstance(context) != null) {
                 OCR.getInstance(context).release();
                 Log.d(TAG, "百度OCR资源释放成功");
-            }
-            
-            // 释放PaddleOCR资源
-            if (paddleOCRPredictor != null) {
-                try {
-                    paddleOCRPredictor.destroy();
-                    Log.d(TAG, "PaddleOCR资源释放成功");
-                } catch (Exception e) {
-                    Log.e(TAG, "释放PaddleOCR资源失败: " + e.getMessage());
-                } finally {
-                    paddleOCRPredictor = null;
-                }
             }
             
             isInitialized = false;

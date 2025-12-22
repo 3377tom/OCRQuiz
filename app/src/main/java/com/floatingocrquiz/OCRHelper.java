@@ -631,29 +631,6 @@ public class OCRHelper {
     }
     
     /**
-     * 格式化PaddleOCR识别结果
-     * @param results OCR识别结果列表
-     * @return 格式化后的识别结果
-     */
-    private String formatPaddleOCRResult(ArrayList<OcrResultModel> results) {
-        if (results == null || results.isEmpty()) {
-            return "";
-        }
-        
-        StringBuilder sb = new StringBuilder();
-        for (OcrResultModel result : results) {
-            if (result.getLabel() != null && !result.getLabel().isEmpty()) {
-                sb.append(result.getLabel()).append("\n");
-            }
-        }
-        
-        String fullText = sb.toString().trim();
-        
-        // 应用题干字数限制
-        return applyQuestionLengthLimit(fullText);
-    }
-    
-    /**
      * 释放OCR资源
      */
     public void release() {

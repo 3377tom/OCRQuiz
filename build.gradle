@@ -3,10 +3,6 @@ buildscript {
     repositories {
         google()
         mavenCentral()
-        // 添加百度PaddleLite的Maven仓库
-        maven {
-            url 'https://paddlelite.bj.bcebos.com/maven/repository/'
-        }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:8.2.0'
@@ -21,10 +17,6 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-        // 添加百度PaddleLite的Maven仓库
-        maven {
-            url 'https://paddlelite.bj.bcebos.com/maven/repository/'
-        }
     }
 }
 

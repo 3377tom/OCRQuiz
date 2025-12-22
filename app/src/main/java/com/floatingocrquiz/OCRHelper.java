@@ -326,8 +326,23 @@ public class OCRHelper {
             
             Log.d(TAG, "开始初始化百度OCR SDK");
             
+            // 检查OCR类是否可用
+            if (OCR.class == null) {
+                Log.e(TAG, "OCR类不可用，无法初始化百度OCR SDK");
+                isInitialized = false;
+                return;
+            }
+            
             // 检查OCR实例是否为空
-            OCR ocrInstance = OCR.getInstance(context);
+            OCR ocrInstance = null;
+            try {
+                ocrInstance = OCR.getInstance(context);
+            } catch (Exception e) {
+                Log.e(TAG, "获取OCR实例失败: " + e.getMessage());
+                isInitialized = false;
+                return;
+            }
+            
             if (ocrInstance == null) {
                 Log.e(TAG, "OCR实例为空，无法初始化百度OCR SDK");
                 isInitialized = false;

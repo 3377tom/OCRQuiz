@@ -16,10 +16,6 @@ import com.baidu.ocr.sdk.model.GeneralResult;
 import com.baidu.ocr.sdk.model.WordSimple;
 
 // PaddleOCR相关导入
-import com.baidu.paddle.lite.MobileConfig;
-import com.baidu.paddle.lite.PaddlePredictor;
-import com.baidu.paddle.lite.Tensor;
-import com.baidu.paddle.lite.PowerMode;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -57,8 +53,9 @@ public class OCRHelper {
     private static final String REC_ENGLISH_MODEL_NAME = "rec_english_common_infer";
     
     // PaddleOCR相关变量
-    private PaddlePredictor paddleOCRPredictor = null;
+    private OCRPredictorNative paddleOCRPredictor = null;
     private static final String PADDLE_OCR_MODEL_DIR = "paddleocr";
+    // 使用目录结构的模型名称，与当前assets中的模型结构一致
     private static final String DET_MODEL_NAME = "det_chinese_db_infer";
     private static final String REC_MODEL_NAME = "rec_chinese_common_infer";
     private static final String CLS_MODEL_NAME = "cls_chinese_infer";
@@ -94,7 +91,7 @@ public class OCRHelper {
             // 关闭之前的预测器（如果存在）
             if (paddleOCRPredictor != null) {
                 try {
-                    // PaddlePredictor类没有close()方法，直接设置为null
+                    paddleOCRPredictor.destroy();
                     paddleOCRPredictor = null;
                     Log.d(TAG, "已关闭之前的PaddleOCR预测器");
                 } catch (Exception e) {
@@ -103,25 +100,40 @@ public class OCRHelper {
             }
             
             // 检查模型文件是否存在，不存在则复制
-            String modelPath = context.getFilesDir().getAbsolutePath() + File.separator + PADDLE_OCR_MODEL_DIR;
-            File detModelFile = new File(modelPath + File.separator + DET_MODEL_NAME + File.separator + "model.nb");
-            File recModelFile = new File(modelPath + File.separator + 
-                (currentOCRLanguage == OCRLanguageType.CHINESE ? REC_MODEL_NAME : REC_ENGLISH_MODEL_NAME) + File.separator + "model.nb");
-            File clsModelFile = new File(modelPath + File.separator + CLS_MODEL_NAME + File.separator + "model.nb");
-            File labelFile = new File(modelPath + File.separator + LABEL_FILE_NAME);
-            
-            if (!detModelFile.exists() || !recModelFile.exists() || !clsModelFile.exists() || !labelFile.exists()) {
-                Log.d(TAG, "PaddleOCR模型文件不存在，尝试从assets复制");
-                try {
-                    copyPaddleOCRModelsFromAssets();
-                } catch (Exception e) {
-                    Log.e(TAG, "复制PaddleOCR模型文件失败: " + e.getMessage());
-                    return;
-                }
+        String modelPath = context.getCacheDir() + File.separator + PADDLE_OCR_MODEL_DIR;
+        
+        // 实际的模型文件路径（与assets中的目录结构一致）
+        String detModelPath = modelPath + File.separator + DET_MODEL_NAME + File.separator + "model.nb";
+        String recModelPath = modelPath + File.separator + 
+            (currentOCRLanguage == OCRLanguageType.CHINESE ? REC_MODEL_NAME : REC_ENGLISH_MODEL_NAME) + 
+            File.separator + "model.nb";
+        String clsModelPath = modelPath + File.separator + CLS_MODEL_NAME + File.separator + "model.nb";
+        
+        File detModelFile = new File(detModelPath);
+        File recModelFile = new File(recModelPath);
+        File clsModelFile = new File(clsModelPath);
+        
+        if (!detModelFile.exists() || !recModelFile.exists() || !clsModelFile.exists()) {
+            Log.d(TAG, "PaddleOCR模型文件不存在，尝试从assets复制");
+            try {
+                copyPaddleOCRModelsFromAssets();
+            } catch (Exception e) {
+                Log.e(TAG, "复制PaddleOCR模型文件失败: " + e.getMessage());
+                return;
             }
+        }
+        
+        // 初始化PaddleOCR预测器
+        OCRPredictorNative.Config config = new OCRPredictorNative.Config();
+        config.useOpencl = 0; // 不使用OpenCL
+        config.cpuThreadNum = 4;
+        config.cpuPower = "LITE_POWER_HIGH";
+        config.detModelFilename = detModelPath;
+        config.recModelFilename = recModelPath;
+        config.clsModelFilename = clsModelPath;
             
-            // 由于PaddleLite SDK不包含OCRConfig和OCRPredictor类，暂时无法初始化PaddleOCR
-            Log.e(TAG, "当前PaddleLite SDK不包含OCR相关API，无法初始化PaddleOCR");
+            paddleOCRPredictor = new OCRPredictorNative(config);
+            Log.d(TAG, "PaddleOCR预测器初始化成功");
             
         } catch (NullPointerException e) {
             Log.e(TAG, "PaddleOCR初始化发生空指针异常: " + e.getMessage());
@@ -138,46 +150,15 @@ public class OCRHelper {
     private void copyPaddleOCRModelsFromAssets() throws IOException {
         Log.d(TAG, "开始从assets复制PaddleOCR模型文件");
         
-        // 需要复制的模型文件列表 - 对于slim模型，只需要.nb文件，不需要params文件
-        String[] modelFiles = {
-            DET_MODEL_NAME + File.separator + "model.nb",
-            REC_MODEL_NAME + File.separator + "model.nb",
-            REC_ENGLISH_MODEL_NAME + File.separator + "model.nb",
-            CLS_MODEL_NAME + File.separator + "model.nb",
-            LABEL_FILE_NAME
-        };
-        
         // 获取目标目录
-        String destDirPath = context.getFilesDir().getAbsolutePath() + File.separator + PADDLE_OCR_MODEL_DIR;
+        String destDirPath = context.getCacheDir() + File.separator + PADDLE_OCR_MODEL_DIR;
         File destDir = new File(destDirPath);
         if (!destDir.exists()) {
             destDir.mkdirs();
         }
         
-        for (String fileName : modelFiles) {
-            String srcFilePath = PADDLE_OCR_MODEL_DIR + File.separator + fileName;
-            String destFilePath = destDirPath + File.separator + fileName;
-            
-            // 创建目标目录
-            File file = new File(destFilePath);
-            File parentDir = file.getParentFile();
-            if (!parentDir.exists()) {
-                parentDir.mkdirs();
-            }
-            
-            // 复制文件
-            InputStream is = context.getAssets().open(srcFilePath);
-            FileOutputStream fos = new FileOutputStream(destFilePath);
-            byte[] buffer = new byte[1024];
-            int length;
-            while ((length = is.read(buffer)) > 0) {
-                fos.write(buffer, 0, length);
-            }
-            fos.close();
-            is.close();
-            
-            Log.d(TAG, "已复制模型文件: " + fileName);
-        }
+        // 复制模型目录下的所有文件
+        Utils.copyDirectoryFromAssets(context, PADDLE_OCR_MODEL_DIR, destDirPath);
         
         Log.d(TAG, "PaddleOCR模型文件复制完成");
     }
@@ -244,7 +225,7 @@ public class OCRHelper {
             // 重新初始化PaddleOCR以切换模型
             if (paddleOCRPredictor != null) {
                 try {
-                    // PaddlePredictor类没有close()方法，直接设置为null
+                    paddleOCRPredictor.destroy();
                     paddleOCRPredictor = null;
                     Log.d(TAG, "已关闭之前的PaddleOCR预测器");
                 } catch (Exception e) {
@@ -567,9 +548,22 @@ public class OCRHelper {
         try {
             Log.d(TAG, "开始PaddleOCR识别，Bitmap尺寸: " + bitmap.getWidth() + "x" + bitmap.getHeight());
             
-            // 当前PaddleLite SDK不包含OCR相关API
-            Log.e(TAG, "当前PaddleLite SDK不包含OCR相关API，无法执行识别");
-            return "[ERROR] 当前PaddleLite SDK不支持OCR功能，请使用百度OCR接口";
+            // 检查预测器是否已经初始化
+            if (paddleOCRPredictor == null) {
+                Log.e(TAG, "PaddleOCR预测器尚未初始化，无法执行识别");
+                return "[ERROR] PaddleOCR预测器未初始化，请检查模型文件是否正确";
+            }
+            
+            // 执行OCR识别
+            int detLongSize = 960; // 检测模型的最大边长
+            int run_det = 1; // 启用检测
+            int run_cls = 1; // 启用方向分类
+            int run_rec = 1; // 启用识别
+            
+            ArrayList<OcrResultModel> results = paddleOCRPredictor.runImage(bitmap, detLongSize, run_det, run_cls, run_rec);
+            
+            // 格式化识别结果
+            return formatPaddleOCRResult(results);
         } catch (NullPointerException e) {
             Log.e(TAG, "PaddleOCR识别发生空指针异常: " + e.getMessage());
             Log.e(TAG, "异常堆栈: " + android.util.Log.getStackTraceString(e));
@@ -723,9 +717,24 @@ public class OCRHelper {
             try {
                 Log.d(TAG, "开始PaddleOCR异步识别，Bitmap尺寸: " + bitmap.getWidth() + "x" + bitmap.getHeight());
                 
-                // 当前PaddleLite SDK不包含OCR相关API
-                Log.e(TAG, "当前PaddleLite SDK不包含OCR相关API，无法执行识别");
-                callback.onOcrComplete("[ERROR] 当前PaddleLite SDK不支持OCR功能，请使用百度OCR接口");
+                // 检查预测器是否已经初始化
+                if (paddleOCRPredictor == null) {
+                    Log.e(TAG, "PaddleOCR预测器尚未初始化，无法执行识别");
+                    callback.onOcrComplete("[ERROR] PaddleOCR预测器未初始化，请检查模型文件是否正确");
+                    return;
+                }
+                
+                // 执行OCR识别
+                int detLongSize = 960; // 检测模型的最大边长
+                int run_det = 1; // 启用检测
+                int run_cls = 1; // 启用方向分类
+                int run_rec = 1; // 启用识别
+                
+                ArrayList<OcrResultModel> results = paddleOCRPredictor.runImage(bitmap, detLongSize, run_det, run_cls, run_rec);
+                
+                // 格式化识别结果
+                String formattedResult = formatPaddleOCRResult(results);
+                callback.onOcrComplete(formattedResult);
             } catch (NullPointerException e) {
                 Log.e(TAG, "PaddleOCR识别发生空指针异常: " + e.getMessage());
                 Log.e(TAG, "异常堆栈: " + android.util.Log.getStackTraceString(e));
@@ -785,6 +794,29 @@ public class OCRHelper {
     }
     
     /**
+     * 格式化PaddleOCR识别结果
+     * @param results OCR识别结果列表
+     * @return 格式化后的识别结果
+     */
+    private String formatPaddleOCRResult(ArrayList<OcrResultModel> results) {
+        if (results == null || results.isEmpty()) {
+            return "";
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        for (OcrResultModel result : results) {
+            if (result.getLabel() != null && !result.getLabel().isEmpty()) {
+                sb.append(result.getLabel()).append("\n");
+            }
+        }
+        
+        String fullText = sb.toString().trim();
+        
+        // 应用题干字数限制
+        return applyQuestionLengthLimit(fullText);
+    }
+    
+    /**
      * 释放OCR资源
      */
     public void release() {
@@ -797,9 +829,14 @@ public class OCRHelper {
             
             // 释放PaddleOCR资源
             if (paddleOCRPredictor != null) {
-                // PaddlePredictor类没有release()方法，直接设置为null
-                paddleOCRPredictor = null;
-                Log.d(TAG, "PaddleOCR资源释放成功");
+                try {
+                    paddleOCRPredictor.destroy();
+                    Log.d(TAG, "PaddleOCR资源释放成功");
+                } catch (Exception e) {
+                    Log.e(TAG, "释放PaddleOCR资源失败: " + e.getMessage());
+                } finally {
+                    paddleOCRPredictor = null;
+                }
             }
             
             isInitialized = false;

@@ -627,10 +627,10 @@ public class FloatingWindowService extends Service {
         final int TAG_LENGTH = CORRECT_TAG.length();
         int currentPosition = 0;
         
+        // 将String转换移到循环外部，避免重复定义变量和重复转换
         while (currentPosition < spannableStringBuilder.length()) {
-            // 使用toString()转换后再调用String的indexOf方法
-            String text = spannableStringBuilder.toString();
-            int correctStart = text.indexOf(CORRECT_TAG, currentPosition);
+            String currentText = spannableStringBuilder.toString();
+            int correctStart = currentText.indexOf(CORRECT_TAG, currentPosition);
             if (correctStart == -1) {
                 break;
             }
@@ -639,13 +639,13 @@ public class FloatingWindowService extends Service {
             int tagEnd = correctStart + TAG_LENGTH;
             
             // 查找当前选项的结束位置（换行符或字符串结束）
-            int optionEnd = text.indexOf("\n", tagEnd);
+            int optionEnd = currentText.indexOf("\n", tagEnd);
             if (optionEnd == -1) {
                 optionEnd = spannableStringBuilder.length();
             }
             
             // 查找选项标签的起始位置（选项编号，如A. B. 等）
-            int optionStart = text.lastIndexOf("\n", correctStart);
+            int optionStart = currentText.lastIndexOf("\n", correctStart);
             if (optionStart == -1) {
                 optionStart = 0; // 如果是第一行，则从字符串开始位置
             } else {

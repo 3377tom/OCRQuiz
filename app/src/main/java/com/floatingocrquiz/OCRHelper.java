@@ -69,11 +69,20 @@ public class OCRHelper {
     private OCRHelper(Context context) {
         this.context = context.getApplicationContext();
         
-        // 初始化百度OCR SDK
-        initBaiduOCR();
-        
-        // 初始化PaddleOCR
-        initPaddleOCR();
+        // 检查是否在主线程
+        if (android.os.Looper.myLooper() == android.os.Looper.getMainLooper()) {
+            // 在主线程，直接初始化百度OCR
+            initBaiduOCR();
+            // 初始化PaddleOCR
+            initPaddleOCR();
+        } else {
+            // 不在主线程，切换到主线程初始化百度OCR SDK
+            new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                initBaiduOCR();
+                // 初始化PaddleOCR
+                initPaddleOCR();
+            });
+        }
     }
     
     /**
@@ -133,8 +142,13 @@ public class OCRHelper {
         config.recModelFilename = recModelPath;
         config.clsModelFilename = clsModelPath;
             
-            paddleOCRPredictor = new OCRPredictorNative(config);
-            Log.d(TAG, "PaddleOCR预测器初始化成功");
+            try {
+                paddleOCRPredictor = new OCRPredictorNative(config);
+                Log.d(TAG, "PaddleOCR预测器初始化成功");
+            } catch (Exception e) {
+                Log.e(TAG, "PaddleOCR预测器初始化失败: " + e.getMessage());
+                paddleOCRPredictor = null;
+            }
             
         } catch (NullPointerException e) {
             Log.e(TAG, "PaddleOCR初始化发生空指针异常: " + e.getMessage());

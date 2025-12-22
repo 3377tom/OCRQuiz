@@ -10,16 +10,17 @@ public class OCRPredictorNative {
 
     private static final AtomicBoolean isSOLoaded = new AtomicBoolean();
 
-    public static void loadLibrary() throws RuntimeException {
+    public static boolean loadLibrary() {
         if (!isSOLoaded.get() && isSOLoaded.compareAndSet(false, true)) {
             try {
                 System.loadLibrary("Native");
+                return true;
             } catch (Throwable e) {
-                RuntimeException exception = new RuntimeException(
-                        "Load libNative.so failed, please check it exists in apk file.", e);
-                throw exception;
+                Log.e("OCRPredictorNative", "Load libNative.so failed, please check it exists in apk file: " + e.getMessage());
+                return false;
             }
         }
+        return true;
     }
 
     private Config config;
@@ -28,16 +29,24 @@ public class OCRPredictorNative {
 
     public OCRPredictorNative(Config config) {
         this.config = config;
-        loadLibrary();
-        nativePointer = init(config.detModelFilename, config.recModelFilename, config.clsModelFilename, config.useOpencl,
-                config.cpuThreadNum, config.cpuPower);
-        Log.i("OCRPredictorNative", "load success " + nativePointer);
-
+        boolean libraryLoaded = loadLibrary();
+        if (libraryLoaded) {
+            nativePointer = init(config.detModelFilename, config.recModelFilename, config.clsModelFilename, config.useOpencl,
+                    config.cpuThreadNum, config.cpuPower);
+            Log.i("OCRPredictorNative", "load success " + nativePointer);
+        } else {
+            nativePointer = 0;
+            Log.e("OCRPredictorNative", "Cannot initialize OCRPredictorNative because libNative.so is not loaded");
+        }
     }
 
 
     public ArrayList<OcrResultModel> runImage(Bitmap originalImage, int max_size_len, int run_det, int run_cls, int run_rec) {
         Log.i("OCRPredictorNative", "begin to run image ");
+        if (nativePointer == 0) {
+            Log.e("OCRPredictorNative", "Cannot run image because native pointer is 0 (libNative.so may be missing)");
+            return new ArrayList<>();
+        }
         float[] rawResults = forward(nativePointer, originalImage, max_size_len, run_det, run_cls, run_rec);
         ArrayList<OcrResultModel> results = postprocess(rawResults);
         return results;

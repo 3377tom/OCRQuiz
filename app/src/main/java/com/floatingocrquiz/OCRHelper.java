@@ -315,10 +315,16 @@ public class OCRHelper {
                 
                 @Override
                 public void onError(OCRError error) {
-                    try {                        resultText[0] = "[ERROR] 识别失败: " + error.getMessage();
+                    try {
+                        if (error != null) {
+                            resultText[0] = "[ERROR] 识别失败: " + error.getMessage();
+                        } else {
+                            resultText[0] = "[ERROR] 识别失败: 未知错误";                        }
                     } finally {
                         // 识别完成后删除临时文件
-                        if (finalTempFilePath != null) {                            BitmapUtils.deleteTempFile(finalTempFilePath);                        }
+                        if (finalTempFilePath != null) {
+                            BitmapUtils.deleteTempFile(finalTempFilePath);
+                        }
                         latch.countDown();
                     }
                 }
@@ -436,10 +442,17 @@ public class OCRHelper {
                 
                 @Override
                 public void onError(OCRError error) {
-                    try {                        callback.onOcrComplete("");
+                    try {
+                        if (error != null) {
+                            callback.onOcrComplete("[ERROR] 识别失败: " + error.getMessage());
+                        } else {
+                            callback.onOcrComplete("[ERROR] 识别失败: 未知错误");
+                        }
                     } finally {
                         // 识别完成后删除临时文件
-                        if (finalTempFilePath != null) {                            BitmapUtils.deleteTempFile(finalTempFilePath);                        }
+                        if (finalTempFilePath != null) {
+                            BitmapUtils.deleteTempFile(finalTempFilePath);
+                        }
                     }
                 }
             });

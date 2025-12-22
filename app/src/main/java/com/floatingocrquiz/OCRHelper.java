@@ -104,13 +104,13 @@ public class OCRHelper {
             
             // 检查模型文件是否存在，不存在则复制
             String modelPath = context.getFilesDir().getAbsolutePath() + File.separator + PADDLE_OCR_MODEL_DIR;
-            File detModelDir = new File(modelPath + File.separator + DET_MODEL_NAME);
-            File recModelDir = new File(modelPath + File.separator + 
-                (currentOCRLanguage == OCRLanguageType.CHINESE ? REC_MODEL_NAME : REC_ENGLISH_MODEL_NAME));
-            File clsModelDir = new File(modelPath + File.separator + CLS_MODEL_NAME);
+            File detModelFile = new File(modelPath + File.separator + DET_MODEL_NAME + File.separator + "model.nb");
+            File recModelFile = new File(modelPath + File.separator + 
+                (currentOCRLanguage == OCRLanguageType.CHINESE ? REC_MODEL_NAME : REC_ENGLISH_MODEL_NAME) + File.separator + "model.nb");
+            File clsModelFile = new File(modelPath + File.separator + CLS_MODEL_NAME + File.separator + "model.nb");
             File labelFile = new File(modelPath + File.separator + LABEL_FILE_NAME);
             
-            if (!detModelDir.exists() || !recModelDir.exists() || !clsModelDir.exists() || !labelFile.exists()) {
+            if (!detModelFile.exists() || !recModelFile.exists() || !clsModelFile.exists() || !labelFile.exists()) {
                 Log.d(TAG, "PaddleOCR模型文件不存在，尝试从assets复制");
                 try {
                     copyPaddleOCRModelsFromAssets();
@@ -138,15 +138,12 @@ public class OCRHelper {
     private void copyPaddleOCRModelsFromAssets() throws IOException {
         Log.d(TAG, "开始从assets复制PaddleOCR模型文件");
         
-        // 需要复制的模型文件列表
+        // 需要复制的模型文件列表 - 对于slim模型，只需要.nb文件，不需要params文件
         String[] modelFiles = {
             DET_MODEL_NAME + File.separator + "model.nb",
-            DET_MODEL_NAME + File.separator + "params",
             REC_MODEL_NAME + File.separator + "model.nb",
-            REC_MODEL_NAME + File.separator + "params",
             REC_ENGLISH_MODEL_NAME + File.separator + "model.nb",
             CLS_MODEL_NAME + File.separator + "model.nb",
-            CLS_MODEL_NAME + File.separator + "params",
             LABEL_FILE_NAME
         };
         

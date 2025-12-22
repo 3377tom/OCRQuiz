@@ -294,7 +294,7 @@ public class ScreenCaptureService extends Service {
                         // 发送广播通知浮动窗口服务，截图已完成，清除"正在截图"提示
                         Intent intent = new Intent(FloatingWindowService.ACTION_UPDATE_ANSWER);
                         intent.putExtra(FloatingWindowService.EXTRA_ANSWER, "");
-                        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+                        LocalBroadcastManager.getInstance(ScreenCaptureService.this).sendBroadcast(intent);
                         
                         // 停止虚拟显示（只需要一次截图）
                         releaseVirtualDisplay();
@@ -486,14 +486,14 @@ public class ScreenCaptureService extends Service {
                                 // 通知浮动窗口设置成功
                                 Intent intent = new Intent(FloatingWindowService.ACTION_UPDATE_ANSWER);
                                 intent.putExtra(FloatingWindowService.EXTRA_ANSWER, "默认截图范围已设置");
-                                LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+                                LocalBroadcastManager.getInstance(ScreenCaptureService.this).sendBroadcast(intent);
                                 
                                 isSettingDefaultRange = false;
                             } else {
                                 // 通知浮动窗口设置失败
                                 Intent intent = new Intent(FloatingWindowService.ACTION_UPDATE_ANSWER);
                                 intent.putExtra(FloatingWindowService.EXTRA_ANSWER, "默认截图范围设置失败");
-                                LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+                                LocalBroadcastManager.getInstance(ScreenCaptureService.this).sendBroadcast(intent);
                             }
                         } else {
                             // 正常处理选中的截图区域

@@ -19,3 +19,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "FloatingOCRQuiz"
 include ':app'
+// 添加PaddleOCR4Android模块引用
+include ':PaddleOCR4Android'

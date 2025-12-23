@@ -63,6 +63,8 @@ dependencies {
     // 百度OCR Android SDK本地依赖
     implementation(name: 'ocrsdk', ext: 'aar')
     implementation files('libs/license.jar')
+    // PaddleOCR4Android依赖
+    implementation project(':PaddleOCR4Android')
     
 
 

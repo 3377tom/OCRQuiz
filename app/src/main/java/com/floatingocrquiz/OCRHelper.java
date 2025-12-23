@@ -25,15 +25,6 @@ public class OCRHelper {
     private Context context;
     private boolean isInitialized = false;
     
-    // OCR接口类型枚举
-    public enum OCRInterfaceType {
-        BAIDU_OCR,
-        PADDLE_OCR
-    }
-    
-    // 默认使用百度OCR
-    private OCRInterfaceType currentOCRInterface = OCRInterfaceType.BAIDU_OCR;
-    
     // OCR语言类型枚举
     public enum OCRLanguageType {
         CHINESE,
@@ -42,6 +33,8 @@ public class OCRHelper {
     
     // 默认使用中文识别
     private OCRLanguageType currentOCRLanguage = OCRLanguageType.CHINESE;
+    
+    
     
     /**
      * 私有构造函数，防止外部实例化
@@ -81,27 +74,8 @@ public class OCRHelper {
             }
         }
         // 从SharedPreferences读取默认设置
-        instance.loadOCRInterfaceSetting();
         instance.loadOCRLanguageSetting();
         return instance;
-    }
-    
-    /**
-     * 获取当前使用的OCR接口类型
-     * @return 当前OCR接口类型
-     */
-    public OCRInterfaceType getCurrentOCRInterface() {
-        return currentOCRInterface;
-    }
-    
-    /**
-     * 设置当前使用的OCR接口类型
-     * @param ocrInterfaceType OCR接口类型
-     */
-    public void setCurrentOCRInterface(OCRInterfaceType ocrInterfaceType) {
-        currentOCRInterface = ocrInterfaceType;
-        // 保存设置到SharedPreferences
-        saveOCRInterfaceSetting();
     }
     
     /**
@@ -121,34 +95,6 @@ public class OCRHelper {
             currentOCRLanguage = languageType;
             // 保存设置到SharedPreferences
             saveOCRLanguageSetting();
-        }
-    }
-    
-    /**
-     * 从SharedPreferences加载OCR接口设置
-     */
-    private void loadOCRInterfaceSetting() {
-        try {
-            SharedPreferences prefs = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE);
-            String interfaceType = prefs.getString("ocr_interface", "BAIDU_OCR");
-            currentOCRInterface = OCRInterfaceType.valueOf(interfaceType);
-        } catch (Exception e) {
-            Log.e(TAG, "加载OCR接口设置失败: " + e.getMessage());
-            currentOCRInterface = OCRInterfaceType.BAIDU_OCR;
-        }
-    }
-    
-    /**
-     * 保存OCR接口设置到SharedPreferences
-     */
-    private void saveOCRInterfaceSetting() {
-        try {
-            SharedPreferences prefs = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE);
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putString("ocr_interface", currentOCRInterface.name());
-            editor.apply();
-        } catch (Exception e) {
-            Log.e(TAG, "保存OCR接口设置失败: " + e.getMessage());
         }
     }
     
@@ -262,16 +208,7 @@ public class OCRHelper {
      * @return 识别结果
      */
     public String recognizeText(Bitmap bitmap) {
-        switch (currentOCRInterface) {
-            case BAIDU_OCR:
-                return recognizeTextWithBaiduOCR(bitmap);
-            case PADDLE_OCR:
-                // 虚代码调用，返回模拟结果
-                Log.d(TAG, "PaddleOCR接口调用（虚代码），Bitmap尺寸: " + bitmap.getWidth() + "x" + bitmap.getHeight());
-                return "[模拟] PaddleOCR识别结果";
-            default:
-                return "[ERROR] 不支持的OCR接口类型";
-        }
+        return recognizeTextWithBaiduOCR(bitmap);
     }
     
     /**
@@ -446,19 +383,7 @@ public class OCRHelper {
      * @param callback 回调
      */
     public void recognizeTextAsync(Bitmap bitmap, final OcrCallback callback) {
-        switch (currentOCRInterface) {
-            case BAIDU_OCR:
-                recognizeTextWithBaiduOCRAsync(bitmap, callback);
-                break;
-            case PADDLE_OCR:
-                // 虚代码调用，返回模拟结果
-                Log.d(TAG, "PaddleOCR异步接口调用（虚代码），Bitmap尺寸: " + bitmap.getWidth() + "x" + bitmap.getHeight());
-                callback.onOcrComplete("[模拟] PaddleOCR异步识别结果");
-                break;
-            default:
-                callback.onOcrComplete("[ERROR] 不支持的OCR接口类型");
-                break;
-        }
+        recognizeTextWithBaiduOCRAsync(bitmap, callback);
     }
     
     /**

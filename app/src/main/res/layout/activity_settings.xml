@@ -334,6 +334,38 @@
                     android:autoSizeStepGranularity="1sp" />
                 </LinearLayout>
             </LinearLayout>
+        </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- OCR设置卡片 -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/ocr_settings_card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="@android:color/white">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- OCR设置标题 -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="OCR设置"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/purple_700"
+                android:layout_marginBottom="16dp"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="10sp"
+                android:autoSizeMaxTextSize="18sp"
+                android:autoSizeStepGranularity="2sp" />
 
             <!-- OCR接口选择设置 -->
             <LinearLayout
@@ -348,11 +380,7 @@
                     android:text="OCR接口选择"
                     android:textSize="12sp"
                     android:textColor="@color/black"
-                    android:layout_marginBottom="8dp"
-                    android:autoSizeTextType="uniform"
-                    android:autoSizeMinTextSize="8sp"
-                    android:autoSizeMaxTextSize="16sp"
-                    android:autoSizeStepGranularity="2sp" />
+                    android:layout_marginBottom="8dp" />
 
                 <RadioGroup
                     android:id="@+id/ocr_interface_radio_group"
@@ -366,26 +394,13 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="百度OCR"
-                        android:textSize="10sp"
+                        android:textSize="12sp"
                         android:textColor="@color/black"
                         android:checked="true"
                         android:autoSizeTextType="uniform"
                         android:autoSizeMinTextSize="8sp"
-                        android:autoSizeMaxTextSize="14sp"
-                        android:autoSizeStepGranularity="2sp" />
-
-                    <RadioButton
-                        android:id="@+id/paddle_ocr_radio"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="PaddleOCR"
-                        android:textSize="10sp"
-                        android:textColor="@color/black"
-                        android:autoSizeTextType="uniform"
-                        android:autoSizeMinTextSize="8sp"
-                        android:autoSizeMaxTextSize="14sp"
-                        android:autoSizeStepGranularity="2sp" />
+                        android:autoSizeMaxTextSize="13sp"
+                        android:autoSizeStepGranularity="1sp" />
                 </RadioGroup>
             </LinearLayout>
             
@@ -401,11 +416,7 @@
                     android:text="OCR语言选择"
                     android:textSize="12sp"
                     android:textColor="@color/black"
-                    android:layout_marginBottom="8dp"
-                    android:autoSizeTextType="uniform"
-                    android:autoSizeMinTextSize="8sp"
-                    android:autoSizeMaxTextSize="16sp"
-                    android:autoSizeStepGranularity="2sp" />
+                    android:layout_marginBottom="8dp" />
 
                 <RadioGroup
                     android:id="@+id/ocr_language_radio_group"
@@ -419,13 +430,13 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="中文识别"
-                        android:textSize="10sp"
+                        android:textSize="12sp"
                         android:textColor="@color/black"
                         android:checked="true"
                         android:autoSizeTextType="uniform"
                         android:autoSizeMinTextSize="8sp"
-                        android:autoSizeMaxTextSize="14sp"
-                        android:autoSizeStepGranularity="2sp" />
+                        android:autoSizeMaxTextSize="13sp"
+                        android:autoSizeStepGranularity="1sp" />
 
                     <RadioButton
                         android:id="@+id/english_ocr_radio"
@@ -433,12 +444,12 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="英文识别"
-                        android:textSize="10sp"
+                        android:textSize="12sp"
                         android:textColor="@color/black"
                         android:autoSizeTextType="uniform"
                         android:autoSizeMinTextSize="8sp"
-                        android:autoSizeMaxTextSize="14sp"
-                        android:autoSizeStepGranularity="2sp" />
+                        android:autoSizeMaxTextSize="13sp"
+                        android:autoSizeStepGranularity="1sp" />
                 </RadioGroup>
             </LinearLayout>
         </LinearLayout>

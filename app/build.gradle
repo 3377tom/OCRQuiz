@@ -60,11 +60,9 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     
-    // 百度OCR Android SDK本地依赖
+    // 百度OCR SDK本地依赖
     implementation(name: 'ocrsdk', ext: 'aar')
     implementation files('libs/license.jar')
-    // PaddleOCR4Android依赖
-    implementation project(':PaddleOCR4Android')
     
 
 

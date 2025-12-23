@@ -146,6 +146,9 @@ public class QuestionBankHelper {
             return "识别到的问题为空";
         }
         
+        // 打印原始OCR识别的字符
+        Log.d(TAG, "原始OCR识别字符: " + questionText);
+        
         // 清理OCR识别的文本（包含选项，后续根据题型决定是否使用）
         String cleanedQuestion = cleanOCRText(questionText);
         Log.d(TAG, "清理后的完整OCR文本: " + cleanedQuestion);
@@ -308,6 +311,10 @@ public class QuestionBankHelper {
         // 先从OCR文本中提取纯问题内容
         String pureQuestion = extractPureQuestionContent(cleanedOCRText);
         Log.d(TAG, "提取的纯问题内容: " + pureQuestion);
+        
+        // 提取选项并打印日志
+        List<String> extractedOptions = extractOptionsFromOCRText(cleanedOCRText);
+        Log.d(TAG, "提取的选项列表: " + extractedOptions);
         
         // 优化关键词提取
         List<String> coreKeywords = new ArrayList<>();

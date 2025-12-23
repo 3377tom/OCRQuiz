@@ -591,8 +591,8 @@ public class OCRHelper {
         
         String fullText = sb.toString().trim();
         
-        // 应用题干字数限制
-        return applyQuestionLengthLimit(fullText);
+        // 返回完整的识别文本，不应用字数限制
+        return fullText;
     }
     
     /**

@@ -517,7 +517,36 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="作者：忙答之开发团队\n版本：1.0.0\n联系方式：support@miniya.com"
+                android:text="作者：忙答之开发团队"
+                android:textSize="14sp"
+                android:textColor="@color/black"
+                android:lineSpacingExtra="4dp"
+                android:layout_marginBottom="4dp"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="10sp"
+                android:autoSizeMaxTextSize="18sp"
+                android:autoSizeStepGranularity="2sp" />
+            
+            <!-- 版本号显示 -->
+            <TextView
+                android:id="@+id/version_info_textview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="版本：1.0.00"
+                android:textSize="14sp"
+                android:textColor="@color/black"
+                android:lineSpacingExtra="4dp"
+                android:layout_marginBottom="4dp"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="10sp"
+                android:autoSizeMaxTextSize="18sp"
+                android:autoSizeStepGranularity="2sp" />
+            
+            <!-- 联系方式 -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="联系方式：support@miniya.org"
                 android:textSize="14sp"
                 android:textColor="@color/black"
                 android:lineSpacingExtra="4dp"

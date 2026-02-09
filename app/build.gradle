@@ -6,12 +6,46 @@ android {
     namespace 'com.floatingocrquiz'
     compileSdk 34
 
+    // 版本号自动增加逻辑
+    def versionPropsFile = file('version.properties')
+    if (!versionPropsFile.exists()) {
+        versionPropsFile.createNewFile()
+        versionPropsFile.write('major=1\nminor=0\npatch=0')
+    }
+
+    def versionProps = new Properties()
+    versionProps.load(new FileInputStream(versionPropsFile))
+
+    def major = versionProps.getProperty('major', '1').toInteger()
+    def minor = versionProps.getProperty('minor', '0').toInteger()
+    def patch = versionProps.getProperty('patch', '0').toInteger()
+
+    // 每次构建自动增加patch版本号
+    patch++
+    if (patch > 99) {
+        patch = 0
+        minor++
+        if (minor > 9) {
+            minor = 0
+            major++
+        }
+    }
+
+    // 保存更新后的版本号
+    versionProps.setProperty('major', major.toString())
+    versionProps.setProperty('minor', minor.toString())
+    versionProps.setProperty('patch', patch.toString())
+    versionProps.store(versionPropsFile.newWriter(), null)
+
+    def versionNameStr = "${major}.${minor}.${String.format('%02d', patch)}"
+    def versionCodeNum = major * 10000 + minor * 100 + patch
+
     defaultConfig {
         applicationId "com.floatingocrquiz"
         minSdk 26
         targetSdk 34
-        versionCode 1
-        versionName "1.0"
+        versionCode versionCodeNum
+        versionName versionNameStr
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

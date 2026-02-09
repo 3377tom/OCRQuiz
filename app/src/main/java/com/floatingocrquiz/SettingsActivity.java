@@ -1,6 +1,8 @@
 package com.floatingocrquiz;
 
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -206,6 +208,27 @@ public class SettingsActivity extends AppCompatActivity {
                     OCRHelper.OCRLanguageType.valueOf(selectedLanguage)
             );
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // 每次进入页面时更新版本号显示
+        updateVersionInfo();
+    }
+
+    // 更新版本号显示
+    private void updateVersionInfo() {
+        try {
+            PackageInfo packageInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+            String versionName = packageInfo.versionName;
+            TextView versionInfoTextView = findViewById(R.id.version_info_textview);
+            if (versionInfoTextView != null) {
+                versionInfoTextView.setText("版本：" + versionName);
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     // 更新截图延迟显示值

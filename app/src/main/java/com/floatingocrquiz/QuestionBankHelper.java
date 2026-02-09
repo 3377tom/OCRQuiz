@@ -826,8 +826,104 @@ public class QuestionBankHelper {
         sb.append("答案: ");
         
         if (question.type == QuestionType.TRUE_FALSE) {
-            // 判断题显示完整答案
-            sb.append(question.answer.equals("TRUE") ? "✅" : "❌");
+            // 判断题：根据重新排序后的选项生成正确答案
+            List<String> reorderedOptions = getReorderedOptions(question.options, ocrOptions);
+            boolean foundCorrectOption = false;
+            
+            for (String option : reorderedOptions) {
+                boolean isCorrect = isOptionCorrect(option, question.options, question.answer);
+                if (isCorrect) {
+                    // 检查正确选项的内容，确定显示的图标
+                    String cleanedOption = cleanOCRText(option);
+                    boolean shouldBeTrue = cleanedOption.contains("正确") || 
+                                          cleanedOption.equalsIgnoreCase("正确") || 
+                                          cleanedOption.contains("对") ||
+                                          cleanedOption.equalsIgnoreCase("对") ||
+                                          cleanedOption.contains("真") ||
+                                          cleanedOption.equalsIgnoreCase("真") ||
+                                          cleanedOption.contains("是") ||
+                                          cleanedOption.equalsIgnoreCase("是") ||
+                                          cleanedOption.contains("√") ||
+                                          cleanedOption.contains("✓") ||
+                                          cleanedOption.contains("✔") ||
+                                          cleanedOption.contains("✅") ||
+                                          cleanedOption.contains("🌕") ||
+                                          cleanedOption.contains("✓") ||
+                                          cleanedOption.contains("T") ||
+                                          cleanedOption.equalsIgnoreCase("T") ||
+                                          cleanedOption.contains("Yes") ||
+                                          cleanedOption.equalsIgnoreCase("Yes") ||
+                                          cleanedOption.contains("Y") ||
+                                          cleanedOption.equalsIgnoreCase("Y");
+                    
+                    if (shouldBeTrue) {
+                        sb.append("✅");
+                    } else {
+                        sb.append("❌");
+                    }
+                    foundCorrectOption = true;
+                    break;
+                }
+            }
+            
+            if (!foundCorrectOption) {
+                // 如果没有找到正确选项，检查答案是否为选项字母（如"A"）
+                boolean isAnswerOptionLetter = false;
+                for (char c = 'A'; c <= 'Z'; c++) {
+                    if (question.answer.equals(String.valueOf(c))) {
+                        isAnswerOptionLetter = true;
+                        break;
+                    }
+                }
+                
+                if (isAnswerOptionLetter) {
+                    // 答案为选项字母，查找对应的选项内容
+                    List<String> originalOptions = question.options;
+                    if (originalOptions != null && !originalOptions.isEmpty()) {
+                        // 将选项字母转换为索引
+                        int answerIndex = question.answer.charAt(0) - 'A';
+                        if (answerIndex >= 0 && answerIndex < originalOptions.size()) {
+                            String answerOption = originalOptions.get(answerIndex);
+                            String cleanedOption = cleanOCRText(answerOption);
+                            boolean shouldBeTrue = cleanedOption.contains("正确") || 
+                                                  cleanedOption.equalsIgnoreCase("正确") || 
+                                                  cleanedOption.contains("对") ||
+                                                  cleanedOption.equalsIgnoreCase("对") ||
+                                                  cleanedOption.contains("真") ||
+                                                  cleanedOption.equalsIgnoreCase("真") ||
+                                                  cleanedOption.contains("是") ||
+                                                  cleanedOption.equalsIgnoreCase("是") ||
+                                                  cleanedOption.contains("√") ||
+                                                  cleanedOption.contains("✓") ||
+                                                  cleanedOption.contains("✔") ||
+                                                  cleanedOption.contains("✅") ||
+                                                  cleanedOption.contains("🌕") ||
+                                                  cleanedOption.contains("✓") ||
+                                                  cleanedOption.contains("T") ||
+                                                  cleanedOption.equalsIgnoreCase("T") ||
+                                                  cleanedOption.contains("Yes") ||
+                                                  cleanedOption.equalsIgnoreCase("Yes") ||
+                                                  cleanedOption.contains("Y") ||
+                                                  cleanedOption.equalsIgnoreCase("Y");
+                            
+                            if (shouldBeTrue) {
+                                sb.append("✅");
+                            } else {
+                                sb.append("❌");
+                            }
+                        } else {
+                            // 索引无效，显示原始答案
+                            sb.append(question.answer);
+                        }
+                    } else {
+                        // 没有选项，显示原始答案
+                        sb.append(question.answer);
+                    }
+                } else {
+                    // 回退到原始逻辑，使用忽略大小写比较
+                    sb.append(question.answer.equalsIgnoreCase("TRUE") ? "✅" : "❌");
+                }
+            }
         } else if (question.type == QuestionType.SHORT) {
             // 简答题显示完整答案
             sb.append(question.answer);
